@@ -1,0 +1,6 @@
+{
+  "name": "UrbanConnect",
+  "description": "Smart Community & Urban Service Hub mobile application prototype featuring civic information, transit schedules, community feed, and citizen services.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
