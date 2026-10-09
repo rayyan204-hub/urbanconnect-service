@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, useMemo, ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ScreenId, UserProfile } from './types';
 import { INITIAL_USER } from './data/mockData';
@@ -19,6 +19,88 @@ import { TrainInfoScreen } from './screens/TrainInfoScreen';
 import { ComplaintTrackingScreen } from './screens/ComplaintTrackingScreen';
 import { UserProfileScreen } from './screens/UserProfileScreen';
 import { ServicesHubScreen } from './screens/ServicesHubScreen';
+import { AdminDashboardScreen } from './screens/AdminDashboardScreen';
+import { UnifiedMapScreen } from './screens/UnifiedMapScreen';
+import { SmartParkingScreen } from './screens/SmartParkingScreen';
+import { JourneyPlannerScreen } from './screens/JourneyPlannerScreen';
+import { CivicAnalyticsScreen } from './screens/CivicAnalyticsScreen';
+import { AIChatAssistant } from './components/common/AIChatAssistant';
+import { EmergencyModal } from './components/common/EmergencyModal';
+import { getCurrentAuthUser } from './services/authService';
+import { LanguageProvider } from './context/LanguageContext';
+
+export type Theme = 'light' | 'dark';
+
+export interface ThemeContextType {
+  theme: Theme;
+  isDark: boolean;
+  toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
+}
+
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const THEME_STORAGE_KEY = 'urbanconnect_theme';
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    try {
+      const saved = localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved === 'dark' || saved === 'light') {
+        return saved;
+      }
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+    } catch {
+      // Fallback
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Ignore
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+  };
+
+  const value = useMemo(
+    () => ({
+      theme,
+      isDark: theme === 'dark',
+      toggleTheme,
+      setTheme,
+    }),
+    [theme]
+  );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
+export function useTheme(): ThemeContextType {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}
 
 // Logical screen order to establish directional navigation depth
 const SCREEN_DEPTH: Record<ScreenId, number> = {
@@ -26,15 +108,20 @@ const SCREEN_DEPTH: Record<ScreenId, number> = {
   login: 1,
   register: 2,
   home: 10,
+  map: 11,
+  'bus-info': 12,
+  'train-info': 13,
+  'journey-planner': 14,
+  parking: 15,
+  complaints: 16,
+  'blood-donation': 17,
+  'volunteer-events': 18,
+  analytics: 19,
   services: 20,
   community: 30,
   'lost-found': 40,
   profile: 50,
-  'bus-info': 12,
-  'train-info': 13,
-  'blood-donation': 14,
-  'volunteer-events': 15,
-  complaints: 16,
+  admin: 60,
 };
 
 // Subtle slide-in & fade animation variants
@@ -66,11 +153,13 @@ const screenTransitionVariants = {
   }),
 };
 
-export default function App() {
+function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<ScreenId>('home');
   const [isDeviceFrame, setIsDeviceFrame] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
+      const authUser = getCurrentAuthUser();
+      if (authUser) return authUser;
       const saved = localStorage.getItem('urbanconnect_user');
       if (saved) return JSON.parse(saved);
     } catch {
@@ -81,7 +170,10 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [direction, setDirection] = useState<number>(1);
+  const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const prevScreenRef = useRef<ScreenId>('home');
+  const { theme, isDark } = useTheme();
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -130,6 +222,7 @@ export default function App() {
     'splash',
     'login',
     'register',
+    'admin',
   ].includes(currentScreen);
 
   const renderActiveScreen = () => {
@@ -156,6 +249,7 @@ export default function App() {
           <HomeDashboard
             onNavigate={handleNavigate}
             currentUser={currentUser}
+            onOpenAIChat={() => setIsAIChatOpen(true)}
           />
         );
       case 'community':
@@ -172,12 +266,30 @@ export default function App() {
         return <TrainInfoScreen onNavigate={handleNavigate} currentUser={currentUser} />;
       case 'complaints':
         return <ComplaintTrackingScreen onNavigate={handleNavigate} currentUser={currentUser} />;
+      case 'map':
+        return <UnifiedMapScreen onNavigate={handleNavigate} currentUser={currentUser} />;
+      case 'parking':
+        return <SmartParkingScreen onNavigate={handleNavigate} currentUser={currentUser} />;
+      case 'journey-planner':
+        return <JourneyPlannerScreen onNavigate={handleNavigate} currentUser={currentUser} />;
+      case 'analytics':
+        return <CivicAnalyticsScreen onNavigate={handleNavigate} currentUser={currentUser} />;
+      case 'admin':
+        return <AdminDashboardScreen onNavigate={handleNavigate} currentUser={currentUser} />;
       case 'profile':
         return (
           <UserProfileScreen
             onNavigate={handleNavigate}
             currentUser={currentUser}
             onLogout={handleLogout}
+            onUserUpdate={(updated) => {
+              setCurrentUser(updated);
+              try {
+                localStorage.setItem('urbanconnect_user', JSON.stringify(updated));
+              } catch {
+                // ignore
+              }
+            }}
           />
         );
       case 'services':
@@ -192,8 +304,9 @@ export default function App() {
     }
   };
 
+
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-teal-600 selection:text-white relative">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#090d16] flex flex-col font-sans selection:bg-teal-600 selection:text-white relative transition-colors">
       {/* Top Prototype Navigation & Viewport Mode Bar */}
       <PrototypeBar
         currentScreen={currentScreen}
@@ -206,8 +319,8 @@ export default function App() {
 
       {/* Interactive Toast Notification Banner */}
       {toastMessage && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 transition-all">
-          <div className="bg-slate-900/95 text-white text-xs font-semibold px-4 py-2 rounded-full border border-teal-500/40 shadow-2xl backdrop-blur-md flex items-center gap-2 tracking-wide">
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 transition-all pointer-events-none">
+          <div className="bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-full border border-teal-500/40 shadow-2xl backdrop-blur-md flex items-center gap-2 tracking-wide pointer-events-auto">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>{toastMessage}</span>
           </div>
@@ -234,14 +347,41 @@ export default function App() {
               </AnimatePresence>
             </div>
             {showBottomNav && (
-              <BottomNavBar
-                currentScreen={currentScreen}
-                onNavigate={handleNavigate}
-              />
+              <>
+                <AIChatAssistant
+                  isOpen={isAIChatOpen}
+                  onClose={() => setIsAIChatOpen(false)}
+                  currentUser={currentUser}
+                  onNavigate={handleNavigate}
+                  onOpenEmergencyModal={() => setIsEmergencyOpen(true)}
+                />
+                <BottomNavBar
+                  currentScreen={currentScreen}
+                  onNavigate={handleNavigate}
+                  onOpenAIChat={() => setIsAIChatOpen(true)}
+                  isAIChatOpen={isAIChatOpen}
+                />
+              </>
             )}
           </div>
         </PhoneFrame>
+
+        {/* Global Emergency Hotline Mode Overlay */}
+        <EmergencyModal
+          isOpen={isEmergencyOpen}
+          onClose={() => setIsEmergencyOpen(false)}
+        />
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

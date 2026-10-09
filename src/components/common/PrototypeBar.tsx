@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ScreenId, UserProfile } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import {
   Smartphone,
   Monitor,
@@ -9,6 +11,8 @@ import {
   LogIn,
   Layers,
   ChevronUp,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 interface PrototypeBarProps {
@@ -32,7 +36,12 @@ const SCREENS: { id: ScreenId; label: string }[] = [
   { id: 'bus-info', label: '9. Bus Transit' },
   { id: 'train-info', label: '10. Train Departures' },
   { id: 'complaints', label: '11. Complaint Tracking' },
-  { id: 'profile', label: '12. User Profile' },
+  { id: 'map', label: '12. Unified Civic Map (Leaflet)' },
+  { id: 'parking', label: '13. Smart Parking Desk' },
+  { id: 'journey-planner', label: '14. Multi-Modal Transit Planner' },
+  { id: 'analytics', label: '15. Civic Analytics & Ward Scores' },
+  { id: 'profile', label: '16. User Profile & Points' },
+  { id: 'admin', label: '17. Municipal Admin HQ' },
   { id: 'services', label: 'Directory: Services Hub' },
 ];
 
@@ -45,10 +54,20 @@ export function PrototypeBar({
   onLogout,
 }: PrototypeBarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme, isDark, toggleTheme } = useTheme();
 
   if (isCollapsed) {
     return (
-      <div className="fixed top-2 right-2 z-50">
+      <div className="fixed top-2 right-2 z-50 flex items-center gap-2">
+        <button
+          id="btn-prototype-theme-collapsed"
+          onClick={toggleTheme}
+          className="bg-slate-900/90 hover:bg-slate-900 text-teal-300 p-2 rounded-full border border-teal-500/40 shadow-lg backdrop-blur-md transition-colors"
+          title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+          aria-label="Toggle Theme"
+        >
+          {isDark ? <Sun className="w-3.5 h-3.5 text-amber-300" /> : <Moon className="w-3.5 h-3.5 text-teal-300" />}
+        </button>
         <button
           onClick={() => setIsCollapsed(false)}
           className="bg-slate-900/90 hover:bg-slate-900 text-teal-300 px-3 py-1.5 rounded-full border border-teal-500/40 shadow-lg text-xs font-bold flex items-center gap-1.5 backdrop-blur-md"
@@ -66,9 +85,9 @@ export function PrototypeBar({
     <aside
       id="prototype-control-bar"
       aria-label="Prototype Navigation Controls"
-      className="bg-slate-950 text-slate-100 border-b border-slate-800/80 px-3 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs z-50 sticky top-0 shadow-md backdrop-blur-md"
+      className="bg-slate-950 text-slate-100 border-b border-slate-800/80 px-3 py-2 flex items-center justify-between gap-2.5 text-xs z-40 relative shadow-xs overflow-x-auto no-scrollbar flex-nowrap shrink-0"
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <div className="flex items-center gap-1.5 bg-teal-500/20 text-teal-300 font-bold px-2.5 py-1 rounded-lg border border-teal-500/30">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>UrbanConnect</span>
@@ -86,7 +105,7 @@ export function PrototypeBar({
               alt={currentUser.name}
               className="w-4 h-4 rounded-full object-cover"
             />
-            <span className="font-semibold text-[11px] text-teal-200 truncate max-w-[100px]">
+            <span className="font-semibold text-[11px] text-teal-200 truncate max-w-[100px] hidden sm:inline">
               {currentUser.name}
             </span>
           </div>
@@ -101,7 +120,7 @@ export function PrototypeBar({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         {/* Screen Selector Dropdown */}
         <div className="relative flex items-center">
           <label htmlFor="screen-selector" className="sr-only">
@@ -121,6 +140,30 @@ export function PrototypeBar({
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 pointer-events-none" />
         </div>
+
+        {/* Language Switcher */}
+        <LanguageSwitcher variant="pill" />
+
+        {/* Theme Toggle Button */}
+        <button
+          id="btn-prototype-toggle-theme"
+          onClick={toggleTheme}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-teal-500 transition-colors"
+          title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+          aria-label={`Toggle theme (currently ${theme})`}
+        >
+          {isDark ? (
+            <>
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline font-medium">Light</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-3.5 h-3.5 text-teal-400" />
+              <span className="hidden sm:inline font-medium">Dark</span>
+            </>
+          )}
+        </button>
 
         {/* Viewport Frame Toggle */}
         <button

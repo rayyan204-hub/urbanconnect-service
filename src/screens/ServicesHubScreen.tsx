@@ -10,6 +10,11 @@ import {
   AlertOctagon,
   ChevronRight,
   Sparkles,
+  MapPin,
+  Car,
+  Navigation,
+  Activity,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface ServicesHubScreenProps {
@@ -20,19 +25,52 @@ interface ServicesHubScreenProps {
 export function ServicesHubScreen({ onNavigate, currentUser }: ServicesHubScreenProps) {
   const serviceCategories = [
     {
+      name: 'Smart City & Spatial Telemetry',
+      items: [
+        {
+          id: 'map' as ScreenId,
+          title: 'Unified Civic Map (OpenStreetMap)',
+          subtitle: 'Interactive multi-layer GIS with Grievances, Parking availability, and Transit hubs',
+          icon: MapPin,
+          color: 'bg-teal-100 text-teal-800',
+        },
+        {
+          id: 'parking' as ScreenId,
+          title: 'Smart Parking Desk',
+          subtitle: 'Live multi-level lot vacancy, hourly rates, EV charging and instant slot booking',
+          icon: Car,
+          color: 'bg-blue-100 text-blue-800',
+        },
+        {
+          id: 'analytics' as ScreenId,
+          title: 'Civic Analytics & Ward Index',
+          subtitle: 'Ward performance scores (Roads, Waste, Water, Drainage) and citizen leaderboard',
+          icon: Activity,
+          color: 'bg-purple-100 text-purple-800',
+        },
+      ],
+    },
+    {
       name: 'Public Transit & Mobility',
       items: [
         {
+          id: 'journey-planner' as ScreenId,
+          title: 'Multi-Modal Journey Planner',
+          subtitle: 'Combined Central & Western locals, Metro 1/2A/7, and BEST/TMT bus routes with live delays',
+          icon: Navigation,
+          color: 'bg-indigo-100 text-indigo-800',
+        },
+        {
           id: 'bus-info' as ScreenId,
-          title: 'Bus Transit & Timetable',
-          subtitle: 'Live line schedules, stops and contactless ticketing',
+          title: 'TMT, BEST & NMMT Bus Transit',
+          subtitle: 'Live line schedules, Ghodbunder corridor & contactless ticketing',
           icon: Bus,
           color: 'bg-cyan-100 text-cyan-800',
         },
         {
           id: 'train-info' as ScreenId,
-          title: 'Train & Metro Schedules',
-          subtitle: 'Grand Central terminal platform and live boarding alerts',
+          title: 'Mumbai Local Trains & Metro',
+          subtitle: 'Central Railway suburban locals, Versova-Ghatkopar & Metro 2A/7 alerts',
           icon: Train,
           color: 'bg-indigo-100 text-indigo-800',
         },
@@ -43,50 +81,57 @@ export function ServicesHubScreen({ onNavigate, currentUser }: ServicesHubScreen
       items: [
         {
           id: 'community' as ScreenId,
-          title: 'Community Announcements',
-          subtitle: 'Civic notices, neighborhood discussions and polls',
+          title: 'Civic & Community Announcements',
+          subtitle: 'TMC & BMC notices, Yeoor Hills canopy drives & neighborhood discussions',
           icon: MessageSquare,
           color: 'bg-teal-100 text-teal-800',
         },
         {
           id: 'lost-found' as ScreenId,
           title: 'Lost & Found Registry',
-          subtitle: 'Report lost belongings, pets, or claim found items',
+          subtitle: 'Report lost belongings, pets, or claim items turned in across Thane & Mumbai transit',
           icon: SearchCode,
           color: 'bg-amber-100 text-amber-800',
         },
         {
           id: 'blood-donation' as ScreenId,
-          title: 'Emergency Blood Donors',
-          subtitle: 'Match donors with urgent hospital requests',
+          title: 'Emergency Blood Donors Network',
+          subtitle: 'Match donors with urgent Thane Civil, KEM & Jupiter Hospital requests',
           icon: HeartPulse,
           color: 'bg-rose-100 text-rose-800',
         },
         {
           id: 'volunteer-events' as ScreenId,
           title: 'Volunteer Initiatives',
-          subtitle: 'Join environmental cleanups and senior literacy programs',
+          subtitle: 'Join Upvan Lake cleanup, SGNP seed sowing & DigiLocker workshops',
           icon: HandHeart,
           color: 'bg-emerald-100 text-emerald-800',
         },
       ],
     },
     {
-      name: 'Municipal Governance',
+      name: 'Municipal Governance & Admin',
       items: [
         {
           id: 'complaints' as ScreenId,
-          title: 'Grievance & Complaint Tracking',
-          subtitle: 'Report road potholes, broken lights, and water issues',
+          title: 'TMC & BMC Grievance Tracking',
+          subtitle: '8-stage complaint lifecycle, before/after evidence photos, and smart duplicate detection',
           icon: AlertOctagon,
           color: 'bg-orange-100 text-orange-800',
+        },
+        {
+          id: 'admin' as ScreenId,
+          title: 'Municipal Officer HQ & Dispatch',
+          subtitle: 'Review incoming civic tickets, dispatch ward engineers, and manage public notices',
+          icon: ShieldCheck,
+          color: 'bg-slate-200 text-slate-800',
         },
       ],
     },
   ];
 
   return (
-    <div id="screen-services-hub" className="flex-1 flex flex-col bg-slate-50 min-h-[780px]">
+    <div id="screen-services-hub" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 min-h-[780px] transition-colors">
       <TopAppBar
         currentScreen="services"
         title="Urban Services Hub"
@@ -111,7 +156,7 @@ export function ServicesHubScreen({ onNavigate, currentUser }: ServicesHubScreen
 
         {serviceCategories.map((group, idx) => (
           <div key={idx} className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider px-1">
+            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">
               {group.name}
             </h4>
             <div className="space-y-2">
@@ -121,22 +166,22 @@ export function ServicesHubScreen({ onNavigate, currentUser }: ServicesHubScreen
                   <div
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
-                    className="p-3 bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-[0.99]"
+                    className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-[0.99]"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                      <div className={`w-10 h-10 rounded-xl ${item.color} dark:bg-slate-800 dark:text-teal-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
-                        <h5 className="text-xs font-bold text-slate-900 group-hover:text-teal-700 transition-colors truncate">
+                        <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors truncate">
                           {item.title}
                         </h5>
-                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                           {item.subtitle}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-teal-600 transition-colors flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors flex-shrink-0" />
                   </div>
                 );
               })}
