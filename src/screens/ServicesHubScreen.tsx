@@ -1,20 +1,19 @@
 import { ScreenId, UserProfile } from '../types';
 import { TopAppBar } from '../components/common/TopAppBar';
 import {
-  MessageSquare,
-  SearchCode,
-  HeartPulse,
-  HandHeart,
-  Bus,
-  Train,
-  AlertOctagon,
-  ChevronRight,
-  Sparkles,
   MapPin,
   Car,
-  Navigation,
   Activity,
-  ShieldCheck,
+  Navigation,
+  Bus,
+  Train,
+  AlertCircle,
+  HeartPulse,
+  Users,
+  Search,
+  ChevronRight,
+  ShieldAlert,
+  Sparkles,
 } from 'lucide-react';
 
 interface ServicesHubScreenProps {
@@ -23,171 +22,184 @@ interface ServicesHubScreenProps {
 }
 
 export function ServicesHubScreen({ onNavigate, currentUser }: ServicesHubScreenProps) {
-  const serviceCategories = [
+  const serviceGroups = [
     {
-      name: 'Smart City & Spatial Telemetry',
+      title: 'Civic Infrastructure & Reporting',
       items: [
         {
+          id: 'complaints' as ScreenId,
+          title: 'Report an Issue (Grievances)',
+          description: 'Potholes, broken streetlights, water supply leaks & garbage dumps',
+          icon: AlertCircle,
+          iconColor: 'text-[#FF3B30]',
+          iconBg: 'bg-[#FF3B30]/10',
+        },
+        {
           id: 'map' as ScreenId,
-          title: 'Unified Civic Map (OpenStreetMap)',
-          subtitle: 'Interactive multi-layer GIS with Grievances, Parking availability, and Transit hubs',
+          title: 'City GIS Map',
+          description: 'Interactive map of municipal amenities, parking, and live issues',
           icon: MapPin,
-          color: 'bg-teal-100 text-teal-800',
+          iconColor: 'text-[#34C759]',
+          iconBg: 'bg-[#34C759]/10',
         },
         {
           id: 'parking' as ScreenId,
-          title: 'Smart Parking Desk',
-          subtitle: 'Live multi-level lot vacancy, hourly rates, EV charging and instant slot booking',
+          title: 'Smart Parking',
+          description: 'Real-time multi-level parking vacancy and slot reservations',
           icon: Car,
-          color: 'bg-blue-100 text-blue-800',
+          iconColor: 'text-[#5856D6]',
+          iconBg: 'bg-[#5856D6]/10',
         },
         {
           id: 'analytics' as ScreenId,
-          title: 'Civic Analytics & Ward Index',
-          subtitle: 'Ward performance scores (Roads, Waste, Water, Drainage) and citizen leaderboard',
+          title: 'Civic Analytics & Ward Scores',
+          description: 'Ward performance indices, resolution speeds & civic rankings',
           icon: Activity,
-          color: 'bg-purple-100 text-purple-800',
+          iconColor: 'text-[#FF9500]',
+          iconBg: 'bg-[#FF9500]/10',
         },
       ],
     },
     {
-      name: 'Public Transit & Mobility',
+      title: 'Public Transit & Mobility',
       items: [
         {
+          id: 'train-info' as ScreenId,
+          title: 'Train & Rail Connect (IRCTC & Suburban)',
+          description: 'Express reservations, live local platform indicator & UTS passes',
+          icon: Train,
+          iconColor: 'text-[#007AFF]',
+          iconBg: 'bg-[#007AFF]/10',
+        },
+        {
           id: 'journey-planner' as ScreenId,
-          title: 'Multi-Modal Journey Planner',
-          subtitle: 'Combined Central & Western locals, Metro 1/2A/7, and BEST/TMT bus routes with live delays',
+          title: 'Multi-Modal Trip Planner',
+          description: 'Find optimal routes combining suburban local trains, metro & buses',
           icon: Navigation,
-          color: 'bg-indigo-100 text-indigo-800',
+          iconColor: 'text-[#0A84FF]',
+          iconBg: 'bg-[#0A84FF]/10',
         },
         {
           id: 'bus-info' as ScreenId,
-          title: 'TMT, BEST & NMMT Bus Transit',
-          subtitle: 'Live line schedules, Ghodbunder corridor & contactless ticketing',
+          title: 'Bus Transit Timetables',
+          description: 'Live BEST, TMT & NMMT routes, frequency and digital passes',
           icon: Bus,
-          color: 'bg-cyan-100 text-cyan-800',
-        },
-        {
-          id: 'train-info' as ScreenId,
-          title: 'Mumbai Local Trains & Metro',
-          subtitle: 'Central Railway suburban locals, Versova-Ghatkopar & Metro 2A/7 alerts',
-          icon: Train,
-          color: 'bg-indigo-100 text-indigo-800',
+          iconColor: 'text-[#30B0C7]',
+          iconBg: 'bg-[#30B0C7]/10',
         },
       ],
     },
     {
-      name: 'Community & Citizen Aid',
+      title: 'Community & Emergency Support',
       items: [
         {
-          id: 'community' as ScreenId,
-          title: 'Civic & Community Announcements',
-          subtitle: 'TMC & BMC notices, Yeoor Hills canopy drives & neighborhood discussions',
-          icon: MessageSquare,
-          color: 'bg-teal-100 text-teal-800',
-        },
-        {
-          id: 'lost-found' as ScreenId,
-          title: 'Lost & Found Registry',
-          subtitle: 'Report lost belongings, pets, or claim items turned in across Thane & Mumbai transit',
-          icon: SearchCode,
-          color: 'bg-amber-100 text-amber-800',
-        },
-        {
           id: 'blood-donation' as ScreenId,
-          title: 'Emergency Blood Donors Network',
-          subtitle: 'Match donors with urgent Thane Civil, KEM & Jupiter Hospital requests',
+          title: 'Blood Donor Network',
+          description: 'Connect with verified life-saving blood donors across Mumbai & Thane',
           icon: HeartPulse,
-          color: 'bg-rose-100 text-rose-800',
+          iconColor: 'text-[#FF2D55]',
+          iconBg: 'bg-[#FF2D55]/10',
+        },
+        {
+          id: 'community' as ScreenId,
+          title: 'Community Bulletin & News',
+          description: 'Neighborhood discussions, ward updates & civic announcements',
+          icon: Users,
+          iconColor: 'text-[#007AFF]',
+          iconBg: 'bg-[#007AFF]/10',
         },
         {
           id: 'volunteer-events' as ScreenId,
           title: 'Volunteer Initiatives',
-          subtitle: 'Join Upvan Lake cleanup, SGNP seed sowing & DigiLocker workshops',
-          icon: HandHeart,
-          color: 'bg-emerald-100 text-emerald-800',
-        },
-      ],
-    },
-    {
-      name: 'Municipal Governance & Admin',
-      items: [
-        {
-          id: 'complaints' as ScreenId,
-          title: 'TMC & BMC Grievance Tracking',
-          subtitle: '8-stage complaint lifecycle, before/after evidence photos, and smart duplicate detection',
-          icon: AlertOctagon,
-          color: 'bg-orange-100 text-orange-800',
+          description: 'Community cleanup drives, tree planting & civic workshops',
+          icon: Sparkles,
+          iconColor: 'text-[#FF9500]',
+          iconBg: 'bg-[#FF9500]/10',
         },
         {
-          id: 'admin' as ScreenId,
-          title: 'Municipal Officer HQ & Dispatch',
-          subtitle: 'Review incoming civic tickets, dispatch ward engineers, and manage public notices',
-          icon: ShieldCheck,
-          color: 'bg-slate-200 text-slate-800',
+          id: 'lost-found' as ScreenId,
+          title: 'Lost & Found Directory',
+          description: 'Report or recover lost citizen belongings in transit & public parks',
+          icon: Search,
+          iconColor: 'text-[#6E6E73]',
+          iconBg: 'bg-[#E5E5EA]',
         },
       ],
     },
   ];
 
   return (
-    <div id="screen-services-hub" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 min-h-[780px] transition-colors">
+    <div id="screen-services-hub" className="flex-1 flex flex-col bg-[#F5F5F7] dark:bg-[#000000] min-h-[780px] transition-colors font-sans pb-12">
       <TopAppBar
         currentScreen="services"
-        title="Urban Services Hub"
-        subtitle="One-Stop Smart City Services Directory"
+        title="City Services"
+        subtitle="Directory of municipal tools and resources"
+        showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
       />
 
-      <div className="p-4 space-y-5 pb-8">
-        <div className="bg-gradient-to-r from-teal-900 to-emerald-900 text-white p-4 rounded-3xl shadow-sm">
-          <div className="flex items-center gap-1.5 text-xs text-teal-300 font-bold uppercase tracking-wider mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-            <span>Civic Services Directory</span>
-          </div>
-          <h3 className="text-sm font-bold text-white leading-snug">
-            Access All Municipal Modules & Transit Feeds
-          </h3>
-          <p className="text-[11px] text-teal-100/90 mt-1">
-            Prototype 1 UI navigation for community, transit, and civic desks.
-          </p>
-        </div>
+      <div className="px-5 sm:px-8 py-6 max-w-4xl mx-auto w-full space-y-8">
+        {serviceGroups.map((group) => (
+          <section key={group.title} className="space-y-3">
+            <h2 className="text-[14px] font-semibold uppercase tracking-wider text-[#6E6E73] dark:text-[#86868B] px-1">
+              {group.title}
+            </h2>
 
-        {serviceCategories.map((group, idx) => (
-          <div key={idx} className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider px-1">
-              {group.name}
-            </h4>
-            <div className="space-y-2">
+            <div className="bg-white dark:bg-[#1C1C1E] rounded-[22px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] divide-y divide-[#E5E5EA]/70 dark:divide-[#2C2C2E]/70 overflow-hidden">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div
+                  <button
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
-                    className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center justify-between gap-3 group active:scale-[0.99]"
+                    className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-[#F9F9FB] dark:hover:bg-[#252528] transition-colors group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-xl ${item.color} dark:bg-slate-800 dark:text-teal-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                        <Icon className="w-5 h-5" />
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-10 h-10 rounded-[12px] ${item.iconBg} ${item.iconColor} flex items-center justify-center shrink-0 transition-transform group-hover:scale-105`}>
+                        <Icon className="w-5 h-5 stroke-[2]" />
                       </div>
                       <div className="min-w-0">
-                        <h5 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors truncate">
+                        <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
                           {item.title}
-                        </h5>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                          {item.subtitle}
-                        </p>
+                        </div>
+                        <div className="text-[13px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                          {item.description}
+                        </div>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors flex-shrink-0" />
-                  </div>
+
+                    <ChevronRight className="w-4 h-4 text-[#86868B] group-hover:text-[#1D1D1F] dark:group-hover:text-white shrink-0 ml-3 transition-transform group-hover:translate-x-0.5" />
+                  </button>
                 );
               })}
             </div>
-          </div>
+          </section>
         ))}
+
+        {currentUser?.role === 'admin' && (
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-[22px] p-5 border border-[#E5E5EA] dark:border-[#2C2C2E] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-[12px] bg-[#1D1D1F] text-white dark:bg-white dark:text-black flex items-center justify-center">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-[15px] font-semibold text-[#1D1D1F] dark:text-white">
+                  Municipal Administrator HQ
+                </div>
+                <div className="text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+                  Manage grievances, transit schedules & field officer assignments
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('admin')}
+              className="px-4 py-2 rounded-full bg-[#1D1D1F] text-white dark:bg-white dark:text-black text-[13px] font-semibold hover:opacity-90 transition-opacity shrink-0"
+            >
+              Open Console
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

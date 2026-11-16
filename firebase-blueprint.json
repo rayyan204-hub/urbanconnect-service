@@ -12,16 +12,122 @@
         "avatar": { "type": "string", "description": "Profile picture URL" },
         "ward": { "type": "string", "description": "Municipal ward zone" },
         "citizenId": { "type": "string", "description": "Unique civic registry ID" },
-        "role": { "type": "string", "enum": ["user", "admin"], "description": "Account role" },
+        "role": { "type": "string", "enum": ["user", "admin", "field_officer", "organizer"], "description": "Account role" },
         "createdAt": { "type": "string", "description": "ISO timestamp of creation" }
       },
       "required": ["uid", "name", "email", "role"]
+    },
+    "Complaint": {
+      "title": "Complaint",
+      "description": "Municipal citizen grievance ticket",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Complaint document ID" },
+        "ticketId": { "type": "string", "description": "Formatted civic ticket ID e.g. TMC-2026-1049" },
+        "userId": { "type": "string", "description": "Citizen UID" },
+        "userName": { "type": "string", "description": "Citizen name" },
+        "title": { "type": "string", "description": "Complaint subject" },
+        "description": { "type": "string", "description": "Grievance details" },
+        "category": { "type": "string", "description": "Civic grievance category" },
+        "location": { "type": "string", "description": "Ward or street location" },
+        "status": { "type": "string", "description": "Current lifecycle status" },
+        "dateFiled": { "type": "string", "description": "Filing timestamp string" },
+        "slaHours": { "type": "number", "description": "SLA resolution target in hours" },
+        "slaDeadline": { "type": "string", "description": "SLA deadline label" }
+      },
+      "required": ["id", "ticketId", "title", "category", "location", "status"]
+    },
+    "CommunityPost": {
+      "title": "CommunityPost",
+      "description": "Civic community board post or alert",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Post document ID" },
+        "author": { "type": "string", "description": "Author display name" },
+        "authorRole": { "type": "string", "description": "Neighborhood or civic role" },
+        "title": { "type": "string", "description": "Post title" },
+        "description": { "type": "string", "description": "Post body content" },
+        "category": { "type": "string", "description": "Category e.g. Civic Notice or Environment" },
+        "date": { "type": "string", "description": "Display date" },
+        "likes": { "type": "number", "description": "Citizen upvote count" },
+        "comments": { "type": "number", "description": "Citizen comments count" }
+      },
+      "required": ["id", "author", "title", "description", "category"]
+    },
+    "LostFoundItem": {
+      "title": "LostFoundItem",
+      "description": "Lost and found citizen registry item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Item ID" },
+        "type": { "type": "string", "enum": ["lost", "found"], "description": "Lost or found type" },
+        "title": { "type": "string", "description": "Item description" },
+        "category": { "type": "string", "description": "Item category" },
+        "location": { "type": "string", "description": "Location item lost or found" },
+        "status": { "type": "string", "enum": ["Open", "Claimed"], "description": "Claim status" }
+      },
+      "required": ["id", "type", "title", "category", "status"]
+    },
+    "TransitBooking": {
+      "title": "TransitBooking",
+      "description": "Transit ticket booked by user (suburban, express, or bus)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Booking document ID" },
+        "pnr": { "type": "string", "description": "PNR or Ticket reference number" },
+        "bookingType": { "type": "string", "description": "IRCTC_RESERVED or UTS_SUBURBAN or BUS_PASS" },
+        "trainNumber": { "type": "string", "description": "Train or bus number" },
+        "trainName": { "type": "string", "description": "Route or service name" },
+        "fromCode": { "type": "string", "description": "Departure station code" },
+        "toCode": { "type": "string", "description": "Destination station code" },
+        "journeyDate": { "type": "string", "description": "Date of journey" },
+        "fare": { "type": "number", "description": "Total fare in INR" },
+        "userId": { "type": "string", "description": "Citizen owner UID" }
+      },
+      "required": ["id", "pnr", "bookingType", "trainNumber", "trainName", "fromCode", "toCode", "fare"]
+    },
+    "TransitBookmark": {
+      "title": "TransitBookmark",
+      "description": "User saved timetable route or transit line bookmark",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Bookmark ID" },
+        "userId": { "type": "string", "description": "User UID owner" },
+        "itemType": { "type": "string", "enum": ["train", "bus"], "description": "Transit type" },
+        "routeNumber": { "type": "string", "description": "Train number or bus route number" },
+        "routeName": { "type": "string", "description": "Name of service or line" },
+        "origin": { "type": "string", "description": "Origin terminal" },
+        "destination": { "type": "string", "description": "Destination terminal" },
+        "departureTime": { "type": "string", "description": "Schedule departure" },
+        "savedAt": { "type": "string", "description": "ISO timestamp saved" }
+      },
+      "required": ["id", "userId", "itemType", "routeNumber", "routeName"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "Stores user profiles keyed by their Firebase Auth UID"
+    },
+    "/complaints/{complaintId}": {
+      "schema": "Complaint",
+      "description": "Public and civic grievances filed by citizens"
+    },
+    "/community_posts/{postId}": {
+      "schema": "CommunityPost",
+      "description": "Community bulletin and civic notices"
+    },
+    "/lost_found/{itemId}": {
+      "schema": "LostFoundItem",
+      "description": "Citizen lost and found items directory"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "TransitBooking",
+      "description": "Citizen transit tickets and passes"
+    },
+    "/users/{userId}/bookmarks/{bookmarkId}": {
+      "schema": "TransitBookmark",
+      "description": "Saved train and bus timetables for the user"
     }
   }
 }

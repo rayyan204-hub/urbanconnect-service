@@ -165,13 +165,14 @@ export const CIVIC_KNOWLEDGE = {
 - **Documents Needed**: PAN card, Aadhar card of proprietor/partners, shop lease agreement or electricity bill, and photo of the shop banner in Marathi (Devanagari script mandatory under state rules).`,
   },
   transit: {
-    routes: `🚆 **Mumbai & Thane Transit Connectivity**
-- **Central Railway**: Fast locals skip slow platforms between Thane and Kurla (Thane -> Mulund -> Ghatkopar -> Kurla -> Dadar -> Byculla -> CSMT).
-- **Electric AC Buses**:
-  • **Route A-700**: Thane Station West to BKC (via Eastern Express Highway & BKC Connector) - Frequency: Every 12 mins.
-  • **Route AC-65**: Thane Station East to Borivali Station West (via Ghodbunder Road).
-  • **Route C-514**: Mulund Depot to Navi Mumbai APMC Vashi.
-- **Digital Ticketing**: Use the UTS mobile app for paperless suburban train tickets or Chalo Smartcard for BEST/TMT bus passes.`,
+    routes: `🚆 **IRCTC Rail Connect & m-Indicator Suburban Transit Super-System**
+- **IRCTC Express & Vande Bharat**:
+  • Book Vande Bharat (20901), Tejas Rajdhani (12951), Deccan Queen (12124), Duronto & Superfast express trains.
+  • Check real-time seat availability (AVAILABLE / RAC / WL), choose berths (Lower, Middle, Upper, Window), and receive instant 10-digit PNR tickets with optical QR & barcodes.
+- **m-Indicator Suburban Network**:
+  • Real-time local train departure board for **Central Line** (CSMT-Kalyan-Kasara), **Western Line** (Churchgate-Virar), **Harbour Line**, **Trans-Harbour** (Thane-Panvel), and **Mumbai Metro 1 & 3**.
+  • Fast/Slow/AC indicators, platform numbers, 12/15-car markers, live GPS countdowns, and Sunday Mega Block schedules.
+  • Instant **UTS Suburban QR Ticket** booking with paperless turnstile validation!`,
   },
 };
 
@@ -648,13 +649,27 @@ export async function processCitizenMessage(
     return res;
   }
 
-  // 12. TRANSIT, TRAINS, BUSES, METRO
-  if (q.includes('train') || q.includes('bus') || q.includes('bkc') || q.includes('metro') || q.includes('route') || q.includes('journey') || q.includes('local')) {
+  // 12. TRANSIT, TRAINS, BUSES, METRO, IRCTC & m-INDICATOR
+  if (
+    q.includes('train') ||
+    q.includes('irctc') ||
+    q.includes('mindicator') ||
+    q.includes('m-indicator') ||
+    q.includes('rail') ||
+    q.includes('local train') ||
+    q.includes('pnr') ||
+    q.includes('uts') ||
+    q.includes('bus') ||
+    q.includes('metro') ||
+    q.includes('route') ||
+    q.includes('journey')
+  ) {
     const res: AIChatResponse = {
       text: CIVIC_KNOWLEDGE.transit.routes,
       source: 'local_engine',
       latencyMs: Math.round(performance.now() - startTime),
       actions: [
+        { label: 'Open IRCTC & m-Indicator Desk', actionId: 'navigate_train_info', icon: 'ticket', primary: true },
         { label: 'Book Smart Parking', actionId: 'check_parking_status', icon: 'parking' },
         { label: 'Report Transit Grievance', actionId: 'report_transit', icon: 'report' },
       ],

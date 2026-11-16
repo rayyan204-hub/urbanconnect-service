@@ -11,8 +11,8 @@ import {
   calculateDistanceMeters,
 } from '../services/dbService';
 import { TopAppBar } from '../components/common/TopAppBar';
-import { OpenStreetMapPicker } from '../components/map/OpenStreetMapPicker';
-import { OpenStreetMapView } from '../components/map/OpenStreetMapView';
+import { GoogleMapPicker } from '../components/map/GoogleMapPicker';
+import { GoogleMapView } from '../components/map/GoogleMapView';
 import { LifecycleTimeline } from '../components/complaints/LifecycleTimeline';
 import { EvidenceComparison } from '../components/complaints/EvidenceComparison';
 import {
@@ -346,22 +346,22 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
 
       <TopAppBar
         currentScreen="complaints"
-        title="Civic Grievance Desk"
-        subtitle="GPS-Powered Reporting & Tracking"
+        title="Grievances"
+        subtitle="Report issues and track 8-stage municipal resolution"
         showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
       />
 
       {/* Action Header & View Switcher */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 transition-colors">
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+      <div className="px-5 sm:px-8 py-3.5 bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-[#2C2C2E] flex items-center justify-between gap-3 transition-colors">
+        <div className="flex items-center gap-1 bg-[#E5E5EA]/60 dark:bg-[#2C2C2E] p-1 rounded-full">
           <button
             onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+            className={`px-3.5 py-1 rounded-full text-[12px] font-medium flex items-center gap-1.5 transition-all ${
               viewMode === 'list'
-                ? 'bg-white dark:bg-slate-700 text-teal-800 dark:text-teal-200 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400'
+                ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] dark:text-[#86868B]'
             }`}
           >
             <List className="w-3.5 h-3.5" />
@@ -369,10 +369,10 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
           </button>
           <button
             onClick={() => setViewMode('map')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors ${
+            className={`px-3.5 py-1 rounded-full text-[12px] font-medium flex items-center gap-1.5 transition-all ${
               viewMode === 'map'
-                ? 'bg-white dark:bg-slate-700 text-teal-800 dark:text-teal-200 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400'
+                ? 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] dark:text-[#86868B]'
             }`}
           >
             <Map className="w-3.5 h-3.5" />
@@ -383,7 +383,7 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
         <button
           id="btn-submit-complaint"
           onClick={() => setIsSubmitModalOpen(true)}
-          className="py-2 px-3.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-colors flex-shrink-0"
+          className="py-2 px-4 rounded-full bg-[#007AFF] hover:bg-[#0062CC] text-white text-[13px] font-semibold shadow-xs flex items-center gap-1.5 transition-all flex-shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Report Issue</span>
@@ -391,33 +391,33 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
       </div>
 
       {/* Scope Filter: All Community vs My Complaints */}
-      <div className="px-4 py-2 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+      <div className="px-5 sm:px-8 py-2.5 bg-[#F5F5F7] dark:bg-[#000000] border-b border-[#E5E5EA] dark:border-[#2C2C2E] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setScopeFilter('all')}
-            className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+            className={`text-[12px] font-medium px-3 py-1 rounded-full transition-all ${
               scopeFilter === 'all'
-                ? 'bg-teal-700 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-black font-semibold shadow-xs'
+                : 'text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
             }`}
           >
-            All Ward Complaints ({complaints.length})
+            All Issues ({complaints.length})
           </button>
           <button
             onClick={() => setScopeFilter('mine')}
-            className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+            className={`text-[12px] font-medium px-3 py-1 rounded-full transition-all ${
               scopeFilter === 'mine'
-                ? 'bg-teal-700 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-black font-semibold shadow-xs'
+                : 'text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
             }`}
           >
-            My Filed Tickets ({complaints.filter((c) => c.userId === currentUser?.uid).length})
+            My Issues ({complaints.filter((c) => c.userId === currentUser?.uid).length})
           </button>
         </div>
 
         <button
           onClick={handleRefresh}
-          className="p-1.5 text-slate-500 hover:text-teal-700 dark:hover:text-teal-400 rounded-lg"
+          className="p-1.5 text-[#86868B] hover:text-[#1D1D1F] dark:hover:text-white rounded-full transition-colors"
           title="Refresh Data"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -425,27 +425,27 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
       </div>
 
       {/* Search & Status Filter Bar */}
-      <div className="p-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 space-y-2">
+      <div className="px-5 sm:px-8 py-3 bg-white dark:bg-[#1C1C1E] border-b border-[#E5E5EA] dark:border-[#2C2C2E] space-y-2.5">
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#86868B] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search ticket ID, issue, or street..."
-            className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-teal-500"
+            className="w-full pl-10 pr-4 py-2 bg-[#F5F5F7] dark:bg-[#2C2C2E] border-none rounded-[12px] text-[13px] text-[#1D1D1F] dark:text-white placeholder-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/25"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
           {(['All', 'Pending', 'Under Review', 'In Progress', 'Resolved'] as const).map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
+              className={`px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap transition-all ${
                 statusFilter === st
-                  ? 'bg-slate-900 dark:bg-teal-700 text-white shadow-2xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+                  : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               {st}
@@ -456,8 +456,8 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
 
       {/* VIEW: MAP MODE */}
       {viewMode === 'map' ? (
-        <div className="flex-1 p-4">
-          <OpenStreetMapView
+        <div className="flex-1 p-3 sm:p-5 w-full min-h-[520px] h-[calc(100vh-250px)]">
+          <GoogleMapView
             complaints={filteredComplaints}
             centerLat={19.2085}
             centerLng={72.9815}
@@ -490,16 +490,16 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
                 key={item.id}
                 onClick={() => setSelectedComplaint(item)}
                 id={`complaint-card-${item.id}`}
-                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-2xs hover:shadow-md transition-all space-y-2.5 cursor-pointer hover:border-teal-400 dark:hover:border-teal-700"
+                className="bg-white dark:bg-[#1C1C1E] rounded-[22px] border border-[#E5E5EA] dark:border-[#2C2C2E] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all space-y-3 cursor-pointer group"
               >
                 {/* Header: Ticket ID, Date & Status */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-mono font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 px-2 py-0.5 rounded-lg">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[12px] font-semibold text-[#007AFF]">
                       {item.ticketId}
                     </span>
-                    <span className="text-[11px] text-slate-400">
-                      {item.dateFiled}
+                    <span className="text-[12px] text-[#86868B]">
+                      · {item.dateFiled}
                     </span>
                     {item.reopened && (
                       <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 rounded-md">
@@ -1003,14 +1003,14 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
               {/* Location Picker Section */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Location (OpenStreetMap & GPS)
+                  Location (Live Map & GPS)
                 </label>
                 <div className="p-2.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-700 dark:text-slate-200 font-semibold truncate pr-2">
                       {locationAddress}
                     </span>
-                    <span className="text-[10px] font-mono text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950 px-1.5 py-0.5 rounded flex-shrink-0">
+                    <span className="text-[10px] font-mono text-[#0071E3] bg-[#0071E3]/10 px-1.5 py-0.5 rounded flex-shrink-0">
                       {selectedLat.toFixed(4)}, {selectedLng.toFixed(4)}
                     </span>
                   </div>
@@ -1018,10 +1018,10 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
                   <button
                     type="button"
                     onClick={() => setShowLocationPickerModal(true)}
-                    className="w-full py-1.5 bg-white dark:bg-slate-800 border border-teal-600 text-teal-700 dark:text-teal-300 rounded-lg text-xs font-bold hover:bg-teal-50 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full py-1.5 bg-white dark:bg-slate-800 border border-[#0071E3] text-[#0071E3] rounded-lg text-xs font-bold hover:bg-[#0071E3]/10 flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <MapPin className="w-3.5 h-3.5" />
-                    <span>Change Pin on OpenStreetMap</span>
+                    <span>Change Pin on Live Map</span>
                   </button>
                 </div>
               </div>
@@ -1099,9 +1099,9 @@ export function ComplaintTrackingScreen({ onNavigate, currentUser }: ComplaintTr
 
       {/* LOCATION PICKER SUB-MODAL */}
       {showLocationPickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs">
-          <div className="w-full max-w-sm">
-            <OpenStreetMapPicker
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md sm:max-w-lg">
+            <GoogleMapPicker
               initialLat={selectedLat}
               initialLng={selectedLng}
               initialAddress={locationAddress}

@@ -1,55 +1,36 @@
-import { useState, useEffect, ElementType } from 'react';
-import { ScreenId, UserProfile } from '../types';
+import { useState, useEffect } from 'react';
+import { ScreenId, UserProfile, Complaint } from '../types';
 import { GlobalSearchBar } from '../components/home/GlobalSearchBar';
-import { WeatherForecastWidget } from '../components/home/WeatherForecastWidget';
-import { WeatherData } from '../services/weatherService';
+import { DailyCivicTipCard } from '../components/home/DailyCivicTipCard';
 import { NotificationsModal } from '../components/common/NotificationsModal';
-import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import {
   getNotifications,
   getComplaints,
-  getCommunityPosts,
-  getVolunteerEvents,
   subscribeToCollection,
   COLLECTIONS,
 } from '../services/dbService';
 import {
-  Search,
-  MessageSquare,
-  SearchCode,
-  HeartPulse,
-  HandHeart,
-  Bus,
+  AlertCircle,
   Train,
-  AlertOctagon,
-  User,
-  ChevronRight,
+  Car,
+  MapPin,
+  Trash2,
+  HeartPulse,
   Sun,
   Wind,
-  PhoneCall,
-  Sparkles,
+  Droplets,
   ArrowRight,
-  PlusCircle,
-  Clock,
-  Compass,
-  LogIn,
-  X,
+  ChevronRight,
   ShieldCheck,
   CheckCircle2,
-  Droplets,
-  Gauge,
-  Phone,
-  AlertTriangle,
-  Info,
-  Bell,
-  ShieldAlert,
-  MapPin,
-  Car,
-  Navigation,
-  Activity,
-  Award,
+  Clock,
+  Sparkles,
   Bot,
+  Layers,
+  Activity,
+  FileText,
+  Users,
 } from 'lucide-react';
 
 interface HomeDashboardProps {
@@ -58,879 +39,487 @@ interface HomeDashboardProps {
   onOpenAIChat?: () => void;
 }
 
-interface FeatureCardConfig {
-  id: ScreenId;
-  category: 'transit' | 'community' | 'aid' | 'civic';
-  title: string;
-  subtitle: string;
-  badge: string;
-  icon: ElementType;
-  iconColor: string;
-  iconBg: string;
-  cardBg: string;
-  accentBorder: string;
-}
-
-const FEATURE_CARDS: FeatureCardConfig[] = [
-  {
-    id: 'map',
-    category: 'civic',
-    title: 'Unified Civic Map',
-    subtitle: 'Interactive OpenStreetMap with complaints, parking & transit layers',
-    badge: 'Live Map GIS',
-    icon: MapPin,
-    iconColor: 'text-teal-700',
-    iconBg: 'bg-teal-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-teal-500',
-  },
-  {
-    id: 'parking',
-    category: 'transit',
-    title: 'Smart Parking Desk',
-    subtitle: 'Real-time multi-level occupancy meters & EV slot reservations',
-    badge: 'Live Vacancy',
-    icon: Car,
-    iconColor: 'text-blue-700',
-    iconBg: 'bg-blue-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-blue-500',
-  },
-  {
-    id: 'journey-planner',
-    category: 'transit',
-    title: 'Multi-Modal Journey Planner',
-    subtitle: 'Central & Western locals, Metro 1/2A/7 & bus recommendations',
-    badge: 'Fast Routes',
-    icon: Navigation,
-    iconColor: 'text-indigo-700',
-    iconBg: 'bg-indigo-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-indigo-500',
-  },
-  {
-    id: 'analytics',
-    category: 'civic',
-    title: 'Civic Analytics & Ward Index',
-    subtitle: 'Municipal service SLA scores, citizen rating & points leaderboard',
-    badge: 'Grade A Audit',
-    icon: Activity,
-    iconColor: 'text-purple-700',
-    iconBg: 'bg-purple-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-purple-500',
-  },
-  {
-    id: 'community',
-    category: 'community',
-    title: 'Community Feed',
-    subtitle: 'Civic notices, neighborhood updates & polls',
-    badge: '3 New Today',
-    icon: MessageSquare,
-    iconColor: 'text-teal-700',
-    iconBg: 'bg-teal-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-teal-500',
-  },
-  {
-    id: 'lost-found',
-    category: 'community',
-    title: 'Lost & Found',
-    subtitle: 'Report or claim lost personal belongings & pets',
-    badge: '4 Active Items',
-    icon: SearchCode,
-    iconColor: 'text-amber-700',
-    iconBg: 'bg-amber-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-amber-500',
-  },
-  {
-    id: 'blood-donation',
-    category: 'aid',
-    title: 'Blood Donation',
-    subtitle: 'Emergency donors network & urgent requests',
-    badge: '6 Donors Nearby',
-    icon: HeartPulse,
-    iconColor: 'text-rose-700',
-    iconBg: 'bg-rose-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-rose-500',
-  },
-  {
-    id: 'volunteer-events',
-    category: 'aid',
-    title: 'Volunteer Events',
-    subtitle: 'City cleanup drives, senior aid & food pantry',
-    badge: '3 Open Drives',
-    icon: HandHeart,
-    iconColor: 'text-emerald-700',
-    iconBg: 'bg-emerald-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-emerald-500',
-  },
-  {
-    id: 'bus-info',
-    category: 'transit',
-    title: 'Bus Information',
-    subtitle: 'Live routes, frequency, fares & timetable',
-    badge: 'Live Schedules',
-    icon: Bus,
-    iconColor: 'text-cyan-700',
-    iconBg: 'bg-cyan-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-cyan-500',
-  },
-  {
-    id: 'train-info',
-    category: 'transit',
-    title: 'Train Information',
-    subtitle: 'Metro & regional rail schedule & platform status',
-    badge: 'Platform Live',
-    icon: Train,
-    iconColor: 'text-indigo-700',
-    iconBg: 'bg-indigo-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-indigo-500',
-  },
-  {
-    id: 'complaints',
-    category: 'civic',
-    title: 'Complaint Tracking',
-    subtitle: 'Log municipal grievances: roads, lights, water',
-    badge: '1 In Progress',
-    icon: AlertOctagon,
-    iconColor: 'text-orange-700',
-    iconBg: 'bg-orange-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-orange-500',
-  },
-  {
-    id: 'profile',
-    category: 'civic',
-    title: 'Citizen Profile',
-    subtitle: 'Smart City Card & Digital Identity',
-    badge: 'Verified ID',
-    icon: User,
-    iconColor: 'text-teal-800',
-    iconBg: 'bg-teal-100',
-    cardBg: 'bg-white',
-    accentBorder: 'border-slate-200/90 hover:border-teal-500',
-  },
-];
-
 export function HomeDashboard({ onNavigate, currentUser, onOpenAIChat }: HomeDashboardProps) {
-  const { t, currentLanguageInfo } = useLanguage();
-  const [activeCategory, setActiveCategory] = useState<'all' | 'transit' | 'community' | 'aid' | 'civic'>('all');
-  const [showWeatherModal, setShowWeatherModal] = useState(false);
-  const [liveWeather, setLiveWeather] = useState<WeatherData | null>(null);
-  const [showHelpDeskModal, setShowHelpDeskModal] = useState(false);
+  const { t } = useLanguage();
+  const [complaints, setComplaints] = useState<Complaint[]>(getComplaints());
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(() => {
     return getNotifications().filter((n) => !n.read).length;
   });
-  const [dismissAdvisory, setDismissAdvisory] = useState(false);
-  const [callingState, setCallingState] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsub = subscribeToCollection(COLLECTIONS.NOTIFICATIONS, () => {
+    const unsub = subscribeToCollection(COLLECTIONS.COMPLAINTS, () => {
+      setComplaints(getComplaints());
+    });
+    const unsubNotif = subscribeToCollection(COLLECTIONS.NOTIFICATIONS, () => {
       setUnreadCount(getNotifications().filter((n) => !n.read).length);
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      unsubNotif();
+    };
   }, []);
 
-  const filteredCards = FEATURE_CARDS.filter((card) => {
-    return activeCategory === 'all' || card.category === activeCategory;
-  });
+  // Compute complaint statistics for user/city
+  const userComplaints = complaints.filter(
+    (c) => !currentUser || c.userId === currentUser.uid || c.userId === 'user-1'
+  );
+  const submittedCount = userComplaints.filter((c) => c.status === 'Submitted').length;
+  const inProgressCount = userComplaints.filter(
+    (c) => ['Assigned', 'In Progress', 'Inspection Scheduled', 'Work Underway', 'Pending Review'].includes(c.status)
+  ).length;
+  const resolvedCount = userComplaints.filter(
+    (c) => ['Resolved', 'Closed'].includes(c.status)
+  ).length;
 
-  const handleSimulateCall = (department: string, number: string) => {
-    setCallingState(`Connecting to ${department} (${number})...`);
-    setTimeout(() => {
-      setCallingState(null);
-      setShowHelpDeskModal(false);
-    }, 2000);
+  const recentComplaints = userComplaints.slice(0, 2);
+
+  // Time-aware greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
 
   return (
-    <div id="screen-home-dashboard" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 min-h-[780px] transition-colors">
-      {/* Top Banner / Welcome Area */}
-      <div className="bg-gradient-to-b from-teal-900 via-teal-900 to-teal-800 dark:from-teal-950 dark:via-slate-900 dark:to-slate-900 text-white px-5 pt-4 pb-6 rounded-b-[32px] shadow-sm relative overflow-hidden transition-colors">
-        {/* Subtle glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-teal-400/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex items-start justify-between mb-3.5">
+    <div id="screen-home-dashboard" className="flex-1 flex flex-col bg-[#F5F5F7] dark:bg-[#000000] min-h-[820px] transition-colors font-sans pb-12">
+      {/* 1. Welcoming Hero Header */}
+      <section className="px-5 sm:px-8 pt-7 pb-5 max-w-4xl mx-auto w-full">
+        <div className="flex items-center justify-between gap-4 mb-3">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-800/80 dark:bg-teal-950/80 border border-teal-700 dark:border-teal-800 text-[10px] font-bold text-teal-200 uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {currentUser?.ward || 'TMC Ward 4'}
-              </div>
-              <button
-                onClick={() => onNavigate('analytics')}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/20 hover:bg-amber-400/30 border border-amber-400/40 text-[10px] font-bold text-amber-200 transition-colors"
-                title="View Civic Points & Ward Health"
-              >
-                <Award className="w-3 h-3 text-amber-300" />
-                <span>{currentUser?.civicPoints || 420} pts</span>
-              </button>
-            </div>
-            <h2 className="text-xl font-black text-white mt-1.5 tracking-tight">
-              {currentUser
-                ? `${t('home_welcome_back', 'Welcome back')}, ${currentUser.name.split(' ')[0]} 👋`
-                : `${t('home_welcome_back', 'Welcome back')}, Citizen 👋`}
-            </h2>
+            <span className="text-[13px] font-medium text-[#6E6E73] dark:text-[#86868B] block">
+              {getGreeting()}{currentUser ? `, ${currentUser.name.split(' ')[0]}` : ''}
+            </span>
+            <h1 className="text-[26px] sm:text-[32px] font-bold text-[#1D1D1F] dark:text-white tracking-tight leading-tight mt-0.5">
+              Your city, connected.
+            </h1>
           </div>
 
-          {/* Action cluster: Language Switcher, Admin shortcut, Notifications bell & Profile */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <LanguageSwitcher variant="pill" />
-
-            {currentUser?.role === 'admin' && (
-              <button
-                id="btn-home-admin"
-                onClick={() => onNavigate('admin')}
-                title="Admin Operations HQ"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-400 text-amber-950 font-black text-[11px] shadow-xs hover:bg-amber-300 transition-colors"
-              >
-                <ShieldAlert className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Admin</span>
-              </button>
-            )}
-
+          {currentUser?.role === 'admin' && (
             <button
-              id="btn-home-notifications"
-              onClick={() => setShowNotificationsModal(true)}
-              className="relative p-2 rounded-xl bg-teal-800/80 hover:bg-teal-700 text-teal-100 border border-teal-700/60 shadow-xs transition-colors"
-              title="Civic Alerts & Notices"
+              onClick={() => onNavigate('admin')}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full bg-[#1D1D1F] text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity"
             >
-              <Bell className="w-4 h-4" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-extrabold text-[9px] rounded-full flex items-center justify-center ring-2 ring-teal-900 animate-pulse">
-                  {unreadCount}
-                </span>
-              )}
+              Admin HQ
             </button>
-
-            {currentUser ? (
-              <button
-                id="btn-home-avatar"
-                onClick={() => onNavigate('profile')}
-                className="w-10 h-10 rounded-2xl overflow-hidden ring-2 ring-teal-400/50 shadow-xs flex-shrink-0 hover:scale-105 transition-transform"
-                title="View Profile"
-              >
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ) : (
-              <button
-                onClick={() => onNavigate('login')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-teal-900 dark:text-teal-200 font-bold text-xs shadow-xs hover:bg-teal-50 dark:hover:bg-slate-700 transition-all"
-              >
-                <LogIn className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
-                <span>Sign In</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-
-        {/* City Stats / Weather / AQI Interactive Pill */}
-        <button
-          onClick={() => {
-            const widgetEl = document.getElementById('weather-forecast-widget');
-            if (widgetEl) {
-              widgetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-              setShowWeatherModal(true);
-            }
-          }}
-          className="w-full flex items-center justify-between bg-teal-950/40 hover:bg-teal-950/60 dark:bg-slate-800/70 dark:hover:bg-slate-800 border border-teal-600/30 dark:border-slate-700/80 rounded-2xl px-3 py-2 text-xs text-teal-100 backdrop-blur-xs transition-all text-left group overflow-x-auto no-scrollbar gap-2"
-          title="Click to view full real-time city weather forecast"
-        >
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Sun className="w-4 h-4 text-amber-300 flex-shrink-0 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-[11px] text-white">
-              {liveWeather ? `${liveWeather.current.temperature}°C` : '27°C'}
-            </span>
-            <span className="text-[10px] text-teal-300 font-medium">
-              {liveWeather?.location.name || 'Mumbai'}
-            </span>
-          </div>
-
-          {/* Severe Weather Alert Badge in Top Bar */}
-          {liveWeather?.severeAlert?.isSevere && (
-            <>
-              <div className="h-3 w-px bg-amber-400/50 shrink-0" />
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/30 font-bold text-[10px] shrink-0">
-                <AlertTriangle className="w-3 h-3 text-amber-300 shrink-0" />
-                <span>Severe Weather Alert</span>
-              </span>
-            </>
           )}
-
-          <div className="h-3 w-px bg-teal-700/60 dark:bg-slate-700 shrink-0" />
-
-          {/* Detailed Humidity Level */}
-          <div className="flex items-center gap-1 text-[11px] shrink-0">
-            <Droplets className="w-3.5 h-3.5 text-cyan-300 flex-shrink-0" />
-            <span className="text-teal-200">
-              {liveWeather ? `${liveWeather.current.humidity}%` : '74%'}
-            </span>
-            <span className="text-[10px] text-teal-300/80 hidden sm:inline">
-              ({liveWeather?.current.humidityDescription || 'High Coastal'})
-            </span>
-          </div>
-
-          <div className="h-3 w-px bg-teal-700/60 dark:bg-slate-700 shrink-0" />
-
-          {/* Detailed Wind Speed */}
-          <div className="flex items-center gap-1 text-[11px] shrink-0">
-            <Wind className="w-3.5 h-3.5 text-teal-300 flex-shrink-0" />
-            <span className="text-teal-200">
-              {liveWeather ? `${liveWeather.current.windSpeed} km/h` : '14 km/h'}
-            </span>
-            <span className="text-[10px] text-teal-300 font-semibold">
-              {liveWeather?.current.windDirection || 'WSW'}
-            </span>
-          </div>
-
-          <div className="h-3 w-px bg-teal-700/60 dark:bg-slate-700 shrink-0" />
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[10px] text-teal-300">AQI</span>
-            <strong className="text-emerald-300 font-bold text-[11px]">
-              {liveWeather ? liveWeather.airQuality.aqi : 54}
-            </strong>
-          </div>
-
-          <span className="text-[11px] text-teal-200 font-medium flex items-center gap-0.5 shrink-0 ml-auto pl-1">
-            <span className="hidden xs:inline text-[10px]">Forecast</span>
-            <ChevronRight className="w-3 h-3 text-teal-400 group-hover:translate-x-0.5 transition-transform" />
-          </span>
-        </button>
-      </div>
-
-      {/* Main Content Body */}
-      <div className="px-4 py-3 -mt-3 flex-1 flex flex-col space-y-3.5">
-        {/* Global Search Bar */}
-        <GlobalSearchBar
-          onNavigate={onNavigate}
-          onOpenHelpDeskModal={() => setShowHelpDeskModal(true)}
-          onOpenWeatherModal={() => setShowWeatherModal(true)}
-        />
-
-        {/* Live Civic Bulletin Marquee (Dismissible) */}
-        {!dismissAdvisory && (
-          <div className="p-2.5 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/40 dark:to-emerald-950/30 border border-teal-200/90 dark:border-teal-800/60 rounded-2xl flex items-center justify-between gap-2 shadow-2xs text-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-teal-600 dark:bg-teal-400 animate-ping flex-shrink-0" />
-              <p className="text-[11px] text-teal-950 dark:text-teal-200 font-medium truncate">
-                <strong className="font-bold text-teal-900 dark:text-teal-100">TMC & Central Railway Alert:</strong> Night block on Thane-Kalyan slow line for girder launch 23:30 to 04:30.
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => onNavigate('train-info')}
-                className="text-[10px] font-bold text-teal-800 dark:text-teal-300 bg-white dark:bg-slate-800 hover:bg-teal-100/60 dark:hover:bg-slate-700 px-2 py-0.5 rounded-lg border border-teal-200 dark:border-teal-700 transition-colors"
-              >
-                View
-              </button>
-              <button
-                onClick={() => setDismissAdvisory(true)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
-                title="Dismiss Notice"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Direct In-Chat AI Civic Concierge Banner */}
-        {onOpenAIChat && (
-          <div
-            onClick={onOpenAIChat}
-            className="p-3 bg-gradient-to-r from-teal-900 via-teal-800 to-emerald-900 text-white rounded-2xl shadow-sm border border-teal-700/50 cursor-pointer hover:shadow-md transition-all flex items-center justify-between gap-3 group"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-md border border-white/20 shrink-0 group-hover:scale-105 transition-transform">
-                <Bot className="w-5 h-5 text-teal-200" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h4 className="text-xs font-bold text-white tracking-wide">UrbanConnect AI Concierge</h4>
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
-                    Direct Resolution
-                  </span>
-                </div>
-                <p className="text-[11px] text-teal-100/80 truncate">
-                  Resolve queries, lodge potholes, or book parking right in chat
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenAIChat();
-              }}
-              className="px-3 py-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-teal-950 font-bold text-xs shrink-0 flex items-center gap-1 shadow-2xs transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-teal-950" />
-              <span>Ask AI</span>
-            </button>
-          </div>
-        )}
-
-        {/* Quick Action Shortcuts (Pills for top citizen tasks) */}
-        <div className="space-y-1.5">
-          <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
-            {t('home_quick_actions', 'Smart City Quick Actions')}
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            <button
-              id="quick-action-map"
-              onClick={() => onNavigate('map')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <MapPin className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_map', 'Civic Map')}
-              </span>
-            </button>
-
-            <button
-              id="quick-action-parking"
-              onClick={() => onNavigate('parking')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <Car className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_parking', 'Parking')}
-              </span>
-            </button>
-
-            <button
-              id="quick-action-journey"
-              onClick={() => onNavigate('journey-planner')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <Navigation className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_journey', 'Trip Plan')}
-              </span>
-            </button>
-
-            <button
-              id="quick-action-complaint"
-              onClick={() => onNavigate('complaints')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-orange-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <AlertOctagon className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_complaints', 'Grievance')}
-              </span>
-            </button>
-
-            <button
-              id="quick-action-analytics"
-              onClick={() => onNavigate('analytics')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <Activity className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_analytics', 'Analytics')}
-              </span>
-            </button>
-
-            <button
-              id="quick-action-blood"
-              onClick={() => onNavigate('blood-donation')}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-slate-700/70 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center shadow-2xs group transition-all"
-            >
-              <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                <HeartPulse className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                {t('nav_blood', 'Blood Aid')}
-              </span>
-            </button>
-          </div>
         </div>
 
-        {/* Real-time Mumbai / Thane Weather Forecast & Monsoon Watch */}
-        <div id="home-weather-section" className="space-y-1.5 pt-0.5">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {t('home_weather_forecast', 'Live Weather & Monsoon Watch')}
-            </span>
-            <span className="text-[10px] text-teal-700 dark:text-teal-400 font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Mumbai / Thane Met
-            </span>
-          </div>
-          <WeatherForecastWidget
-            onWeatherUpdate={setLiveWeather}
-            defaultLocationId="mumbai-city"
-          />
-        </div>
+        <p className="text-[15px] text-[#6E6E73] dark:text-[#86868B] max-w-xl leading-relaxed">
+          Access municipal services, check public transit, and stay informed with real-time updates across Mumbai & Thane.
+        </p>
 
-        {/* Category Navigation Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
-          {(
-            [
-              { id: 'all', label: 'All Services' },
-              { id: 'transit', label: 'Transit & Rail' },
-              { id: 'community', label: 'Community' },
-              { id: 'aid', label: 'Civic Aid' },
-              { id: 'civic', label: 'Governance' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveCategory(tab.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                activeCategory === tab.id
-                  ? 'bg-teal-700 text-white shadow-2xs'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Feature Cards List/Grid */}
-        <div
-          id="feature-cards-grid"
-          className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pb-2"
-        >
-          {filteredCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.id}
-                id={`feature-card-${card.id}`}
-                onClick={() => onNavigate(card.id)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && onNavigate(card.id)}
-                className={`p-3.5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 shadow-2xs hover:shadow-md hover:border-teal-500 dark:hover:border-teal-500 transition-all duration-150 cursor-pointer flex flex-col justify-between group active:scale-[0.99]`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div
-                    className={`w-10 h-10 rounded-xl ${card.iconBg} dark:bg-slate-700/70 ${card.iconColor} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                    {card.badge}
-                  </span>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                      {card.title}
-                    </h4>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" />
-                  </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 leading-relaxed">
-                    {card.subtitle}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Citizen Helpline Quick Pill */}
-        <div
-          onClick={() => setShowHelpDeskModal(true)}
-          className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 flex items-center justify-between gap-3 mt-auto cursor-pointer hover:bg-teal-100/70 dark:hover:bg-teal-950/60 transition-all shadow-2xs"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-teal-700 text-white flex items-center justify-center flex-shrink-0">
-              <PhoneCall className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-teal-950 dark:text-teal-200">TMC & BMC Citizen Helpline: Dial 1916 / 112</div>
-              <div className="text-[10px] text-teal-700 dark:text-teal-400">24/7 Maharashtra Disaster & Municipal Dispatch Directory</div>
-            </div>
-          </div>
+        {/* Primary and Secondary Call to Action Buttons */}
+        <div className="flex items-center gap-3 mt-5 flex-wrap">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowHelpDeskModal(true);
-            }}
-            className="px-3 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-2xs flex-shrink-0"
+            onClick={() => onNavigate('complaints')}
+            className="px-5 py-2.5 rounded-[14px] bg-[#007AFF] hover:bg-[#0062CC] text-white text-[14px] font-semibold transition-all shadow-xs flex items-center gap-2 active:scale-[0.98]"
           >
-            Directory
+            <AlertCircle className="w-4 h-4" />
+            <span>Report an Issue</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('services')}
+            className="px-5 py-2.5 rounded-[14px] bg-white dark:bg-[#1C1C1E] hover:bg-[#E5E5EA]/60 dark:hover:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white text-[14px] font-semibold transition-all border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-xs active:scale-[0.98]"
+          >
+            <span>Explore City Services</span>
           </button>
         </div>
-      </div>
 
-      {/* Weather & Environmental Details Modal */}
-      {showWeatherModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 transition-colors">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Sun className="w-5 h-5 text-amber-500" />
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                  {liveWeather?.location.name || 'Mumbai'} Weather & AQI
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowWeatherModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        {/* Clean Search Bar */}
+        <div className="mt-5">
+          <GlobalSearchBar onNavigate={onNavigate} />
+        </div>
+      </section>
 
-            {/* Severe Weather Alert Warning in Modal */}
-            {liveWeather?.severeAlert?.isSevere && (
-              <div className="p-3 bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/90 dark:border-amber-800/60 rounded-2xl flex items-start gap-2.5 text-xs shadow-2xs">
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="font-bold text-amber-950 dark:text-amber-100">
-                    Severe Weather Alert: {liveWeather.severeAlert.headline}
-                  </div>
-                  <div className="text-[11px] text-amber-800 dark:text-amber-300">
-                    {liveWeather.severeAlert.reasons.join(' • ')}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Weather Metrics Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-2xl">
-                <div className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Temperature</div>
-                <div className="text-lg font-black text-slate-900 dark:text-slate-100 mt-0.5">
-                  {liveWeather ? `${liveWeather.current.temperature}°C` : '27°C'}
-                </div>
-                <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-1">
-                  {liveWeather
-                    ? `High ${liveWeather.todayMax}° • Low ${liveWeather.todayMin}°`
-                    : 'High 32° • Low 25°'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-2xl">
-                <div className="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Air Quality Index</div>
-                <div className="text-lg font-black text-emerald-800 dark:text-emerald-400 mt-0.5">
-                  {liveWeather ? `${liveWeather.airQuality.aqi} AQI` : '41 AQI'}
-                </div>
-                <div className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold mt-1">
-                  {liveWeather
-                    ? `${liveWeather.airQuality.category} • ${liveWeather.location.name}`
-                    : 'Good • Mumbai'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-2xl">
-                <div className="text-slate-500 dark:text-slate-400 text-[11px] font-medium flex items-center justify-between">
-                  <span>Relative Humidity</span>
-                  <span className="text-[10px] font-bold text-cyan-700 dark:text-cyan-400">
-                    {liveWeather?.current.humidityDescription || 'High Coastal'}
-                  </span>
-                </div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1">
-                  <Droplets className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>{liveWeather ? `${liveWeather.current.humidity}%` : '82%'}</span>
-                  <span className="text-[11px] font-normal text-slate-500 ml-1">
-                    (Dew pt: {liveWeather?.current.dewPoint ?? 23}°C)
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
-                  {liveWeather?.current.humidityComfort || 'Coastal humid breeze'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 rounded-2xl">
-                <div className="text-slate-500 dark:text-slate-400 text-[11px] font-medium flex items-center justify-between">
-                  <span>Wind & Sea Breeze</span>
-                  <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400">
-                    {liveWeather?.current.windScale || 'Beaufort 2'}
-                  </span>
-                </div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 flex items-center gap-1">
-                  <Wind className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                  <span>
-                    {liveWeather
-                      ? `${liveWeather.current.windSpeed} km/h ${liveWeather.current.windDirection}`
-                      : '8 km/h SSW'}
-                  </span>
-                  <span className="text-[10px] text-teal-600 dark:text-teal-400 font-medium">
-                    (Gusts {liveWeather?.current.windGusts ?? 25} km/h)
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
-                  {liveWeather?.current.windDescription || 'Gentle coastal breeze'}
-                </div>
-              </div>
-            </div>
-
-            {/* Particulate Matter Readings */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
-              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                MPCB Sensor Feed ({liveWeather?.location.name || 'Thane Naupada & Dadar'})
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                <span>PM2.5 (Fine particulate)</span>
-                <strong className="text-slate-900 dark:text-slate-100">
-                  {liveWeather?.airQuality.pm25 ?? 22.4} µg/m³
-                </strong>
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                <span>PM10 (Dust & vehicle emissions)</span>
-                <strong className="text-slate-900 dark:text-slate-100">
-                  {liveWeather?.airQuality.pm10 ?? 48.6} µg/m³
-                </strong>
-              </div>
-              <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400">
-                <span>Maharashtra Pollution Control Board</span>
-                <strong className="text-emerald-700 dark:text-emerald-400">Within CPCB Limits</strong>
-              </div>
-            </div>
-
+      {/* Main Page Container */}
+      <div className="px-5 sm:px-8 max-w-4xl mx-auto w-full space-y-7">
+        {/* 2. Quick Actions Grid */}
+        <section aria-labelledby="quick-actions-heading">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 id="quick-actions-heading" className="text-[17px] sm:text-[19px] font-semibold text-[#1D1D1F] dark:text-white tracking-tight">
+              Quick Actions
+            </h2>
             <button
-              onClick={() => setShowWeatherModal(false)}
-              className="w-full py-2.5 bg-teal-800 hover:bg-teal-900 dark:bg-teal-700 dark:hover:bg-teal-600 text-white rounded-xl text-xs font-bold transition-colors"
+              onClick={() => onNavigate('services')}
+              className="text-[13px] font-medium text-[#007AFF] hover:underline"
             >
-              Done
+              View all services
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Municipal Helplines & Emergency Directory Modal */}
-      {showHelpDeskModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5 transition-colors">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-teal-700 dark:text-teal-400" />
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                  Thane & Mumbai Emergency Directory
-                </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {/* Card 1: Report a Pothole */}
+            <button
+              onClick={() => onNavigate('complaints')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#FF3B30]/10 text-[#FF3B30] flex items-center justify-center transition-transform group-hover:scale-105">
+                <AlertCircle className="w-5 h-5 stroke-[2]" />
               </div>
-              <button
-                onClick={() => setShowHelpDeskModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Report Pothole
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  Road grievance
+                </div>
+              </div>
+            </button>
+
+            {/* Card 2: Find Public Transport */}
+            <button
+              onClick={() => onNavigate('train-info')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center transition-transform group-hover:scale-105">
+                <Train className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Train & Rail
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  IRCTC & locals
+                </div>
+              </div>
+            </button>
+
+            {/* Card 3: Find Parking */}
+            <button
+              onClick={() => onNavigate('parking')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#5856D6]/10 text-[#5856D6] flex items-center justify-center transition-transform group-hover:scale-105">
+                <Car className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Find Parking
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  Live bay vacancy
+                </div>
+              </div>
+            </button>
+
+            {/* Card 4: Locate Public Toilets / Civic Map */}
+            <button
+              onClick={() => onNavigate('map')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#34C759]/10 text-[#34C759] flex items-center justify-center transition-transform group-hover:scale-105">
+                <MapPin className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Civic Map
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  Toilets & hubs
+                </div>
+              </div>
+            </button>
+
+            {/* Card 5: Garbage Collection */}
+            <button
+              onClick={() => onNavigate('complaints')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center transition-transform group-hover:scale-105">
+                <Trash2 className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Waste Pickup
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  Collection status
+                </div>
+              </div>
+            </button>
+
+            {/* Card 6: Find Blood Donors */}
+            <button
+              onClick={() => onNavigate('blood-donation')}
+              className="p-4 bg-white dark:bg-[#1C1C1E] hover:bg-[#F9F9FB] dark:hover:bg-[#252528] rounded-[18px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-left transition-all group flex flex-col justify-between h-[126px]"
+            >
+              <div className="w-10 h-10 rounded-[12px] bg-[#FF2D55]/10 text-[#FF2D55] flex items-center justify-center transition-transform group-hover:scale-105">
+                <HeartPulse className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white leading-tight">
+                  Blood Donors
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 line-clamp-1">
+                  Emergency aid
+                </div>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* 3. City Overview (Compact, Clear Summary Cards) */}
+        <section aria-labelledby="city-overview-heading">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 id="city-overview-heading" className="text-[17px] sm:text-[19px] font-semibold text-[#1D1D1F] dark:text-white tracking-tight">
+              City Overview
+            </h2>
+            <span className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">
+              Mumbai · Thane
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Weather & AQI Summary Card */}
+            <div className="p-4 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+              <div className="flex items-center justify-between text-[#6E6E73] dark:text-[#86868B] text-[12px] font-medium">
+                <span>Weather & Air</span>
+                <Sun className="w-4 h-4 text-[#FF9500]" />
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-[28px] font-bold text-[#1D1D1F] dark:text-white tracking-tight">
+                  28°C
+                </span>
+                <span className="text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+                  Sunny
+                </span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-[#E5E5EA]/60 dark:border-[#2C2C2E]/60 flex items-center justify-between text-[12px]">
+                <span className="text-[#6E6E73] dark:text-[#86868B]">Air Quality</span>
+                <span className="font-semibold text-[#34C759]">AQI 54 · Good</span>
+              </div>
             </div>
 
-            {callingState ? (
-              <div className="p-6 text-center space-y-2 bg-teal-50 dark:bg-teal-950/50 rounded-2xl border border-teal-200 dark:border-teal-800">
-                <span className="w-3 h-3 rounded-full bg-teal-600 animate-ping inline-block" />
-                <p className="text-xs font-bold text-teal-950 dark:text-teal-200">{callingState}</p>
-                <p className="text-[10px] text-teal-700 dark:text-teal-400">Simulating municipal dispatch patch...</p>
+            {/* Public Transport Live Status */}
+            <div className="p-4 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+              <div className="flex items-center justify-between text-[#6E6E73] dark:text-[#86868B] text-[12px] font-medium">
+                <span>Suburban Rail</span>
+                <Train className="w-4 h-4 text-[#007AFF]" />
               </div>
-            ) : (
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {[
-                  {
-                    name: 'BMC Disaster Control & Helpline',
-                    desc: 'Monsoon high tide, waterlogging, civic emergencies',
-                    number: '1916',
-                    badge: '24/7 BMC',
-                    color: 'text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800',
-                  },
-                  {
-                    name: 'TMC Thane Citizen Grievance Cell',
-                    desc: 'Potholes, solid waste, streetlights, drainage',
-                    number: '1800-222-108',
-                    badge: 'TMC Tollfree',
-                    color: 'text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800',
-                  },
-                  {
-                    name: 'Maharashtra Unified Emergency',
-                    desc: 'Police, highway patrol & life safety',
-                    number: '112',
-                    badge: 'Emergency',
-                    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800',
-                  },
-                  {
-                    name: '108 Ambulance & Medical Emergency',
-                    desc: 'Free Maharashtra emergency medical service (MEMS)',
-                    number: '108',
-                    badge: 'Hospital',
-                    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800',
-                  },
-                  {
-                    name: 'Mumbai & Thane Fire Control',
-                    desc: 'Fire fighting, gas leaks & disaster rescue',
-                    number: '101',
-                    badge: 'Fire Ops',
-                    color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800',
-                  },
-                  {
-                    name: 'Central Railway RPF Security Helpline',
-                    desc: 'Suburban train safety, ladies coach & assistance',
-                    number: '139',
-                    badge: 'Railways',
-                    color: 'text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/50 border-cyan-200 dark:border-cyan-800',
-                  },
-                ].map((item) => (
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-[28px] font-bold text-[#1D1D1F] dark:text-white tracking-tight">
+                  Normal
+                </span>
+                <span className="text-[13px] text-[#34C759] font-medium">
+                  On Time
+                </span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-[#E5E5EA]/60 dark:border-[#2C2C2E]/60 flex items-center justify-between text-[12px]">
+                <span className="text-[#6E6E73] dark:text-[#86868B]">Central & Western</span>
+                <button
+                  onClick={() => onNavigate('train-info')}
+                  className="font-medium text-[#007AFF] hover:underline"
+                >
+                  Timetable →
+                </button>
+              </div>
+            </div>
+
+            {/* Municipal SLA & Cleanliness */}
+            <div className="p-4 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+              <div className="flex items-center justify-between text-[#6E6E73] dark:text-[#86868B] text-[12px] font-medium">
+                <span>Civic Health</span>
+                <Activity className="w-4 h-4 text-[#5856D6]" />
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-[28px] font-bold text-[#1D1D1F] dark:text-white tracking-tight">
+                  88%
+                </span>
+                <span className="text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+                  Resolution Rate
+                </span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-[#E5E5EA]/60 dark:border-[#2C2C2E]/60 flex items-center justify-between text-[12px]">
+                <span className="text-[#6E6E73] dark:text-[#86868B]">Ward 04 Majiwada</span>
+                <button
+                  onClick={() => onNavigate('analytics')}
+                  className="font-medium text-[#007AFF] hover:underline"
+                >
+                  Ward Score →
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Civic Announcements (Clean card, no scrolling terminal) */}
+        <section aria-labelledby="announcements-heading">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 id="announcements-heading" className="text-[17px] sm:text-[19px] font-semibold text-[#1D1D1F] dark:text-white tracking-tight">
+              Civic Announcements
+            </h2>
+            <button
+              onClick={() => onNavigate('community')}
+              className="text-[13px] font-medium text-[#007AFF] hover:underline"
+            >
+              View all
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-5 border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="text-[12px] font-semibold text-[#007AFF] uppercase tracking-wider">
+                  Transport · Central Railway
+                </div>
+                <h3 className="text-[16px] font-semibold text-[#1D1D1F] dark:text-white leading-snug">
+                  Sunday Mega Block on Thane–Kalyan Slow Lines
+                </h3>
+                <p className="text-[14px] text-[#6E6E73] dark:text-[#86868B] leading-relaxed pt-0.5">
+                  Scheduled track maintenance from 11:00 AM to 4:00 PM. Slow trains diverted to fast tracks between Mulund and Kalyan.
+                </p>
+                <div className="text-[12px] text-[#86868B] pt-1">
+                  Published Today, 8:00 AM · TMC & Railway Board
+                </div>
+              </div>
+
+              <button
+                onClick={() => onNavigate('train-info')}
+                className="px-3.5 py-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-[#E5E5EA] dark:hover:bg-[#3A3A3C] text-[#1D1D1F] dark:text-white text-[13px] font-medium transition-colors shrink-0"
+              >
+                View details
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Daily Civic Tip Card */}
+        <section aria-labelledby="daily-tip-heading">
+          <DailyCivicTipCard onNavigate={onNavigate} onOpenAIChat={onOpenAIChat} />
+        </section>
+
+        {/* 6. Complaint Tracking Summary */}
+        <section aria-labelledby="complaints-summary-heading">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 id="complaints-summary-heading" className="text-[17px] sm:text-[19px] font-semibold text-[#1D1D1F] dark:text-white tracking-tight">
+              My Civic Reports
+            </h2>
+            <button
+              onClick={() => onNavigate('complaints')}
+              className="text-[13px] font-medium text-[#007AFF] hover:underline"
+            >
+              View all complaints
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-5 border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+            {/* 3 Metric Counts */}
+            <div className="grid grid-cols-3 divide-x divide-[#E5E5EA] dark:divide-[#2C2C2E] text-center py-1">
+              <div>
+                <div className="text-[22px] font-bold text-[#1D1D1F] dark:text-white">
+                  {submittedCount}
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] font-medium mt-0.5">
+                  Submitted
+                </div>
+              </div>
+              <div>
+                <div className="text-[22px] font-bold text-[#FF9500]">
+                  {inProgressCount}
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] font-medium mt-0.5">
+                  In Progress
+                </div>
+              </div>
+              <div>
+                <div className="text-[22px] font-bold text-[#34C759]">
+                  {resolvedCount}
+                </div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] font-medium mt-0.5">
+                  Resolved
+                </div>
+              </div>
+            </div>
+
+            {/* Recent complaints list */}
+            {recentComplaints.length > 0 ? (
+              <div className="pt-2 border-t border-[#E5E5EA]/80 dark:border-[#2C2C2E]/80 divide-y divide-[#E5E5EA]/60 dark:divide-[#2C2C2E]/60">
+                {recentComplaints.map((c) => (
                   <div
-                    key={item.number}
-                    className="p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-2xs flex items-center justify-between gap-2 hover:border-teal-500 dark:hover:border-teal-400 transition-colors"
+                    key={c.id}
+                    onClick={() => onNavigate('complaints')}
+                    className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F5F5F7]/60 dark:hover:bg-[#2C2C2E]/40 px-2 rounded-xl transition-colors group"
                   >
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{item.name}</span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${item.color}`}>
-                          {item.badge}
-                        </span>
+                      <div className="text-[14px] font-medium text-[#1D1D1F] dark:text-white truncate">
+                        {c.title}
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.desc}</p>
+                      <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5 flex items-center gap-2">
+                        <span>{c.category}</span>
+                        <span>·</span>
+                        <span>{c.ward || 'Ward 04'}</span>
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => handleSimulateCall(item.name, item.number)}
-                      className="px-2.5 py-1 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs flex items-center gap-1 flex-shrink-0 shadow-2xs"
-                    >
-                      <Phone className="w-3 h-3" />
-                      <span>{item.number}</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[12px] font-semibold text-[#007AFF]">
+                        {c.status}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-[#86868B] group-hover:text-[#1D1D1F] dark:group-hover:text-white transition-transform group-hover:translate-x-0.5" />
+                    </div>
                   </div>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-3 text-[13px] text-[#86868B]">
+                No recent issues reported. Everything looks clear!
+              </div>
             )}
+          </div>
+        </section>
 
+        {/* 7. Community Activity / Citizen Initiatives */}
+        <section aria-labelledby="community-activity-heading">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h2 id="community-activity-heading" className="text-[17px] sm:text-[19px] font-semibold text-[#1D1D1F] dark:text-white tracking-tight">
+              Community Initiatives
+            </h2>
             <button
-              onClick={() => setShowHelpDeskModal(false)}
-              className="w-full py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors"
+              onClick={() => onNavigate('community')}
+              className="text-[13px] font-medium text-[#007AFF] hover:underline"
             >
-              Close
+              View community activities
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Notifications Modal */}
-      <NotificationsModal
-        isOpen={showNotificationsModal}
-        onClose={() => setShowNotificationsModal(false)}
-        onNavigate={onNavigate}
-      />
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-5 border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-[12px] font-semibold text-[#34C759] uppercase tracking-wider">
+                Volunteering Drive
+              </span>
+              <h3 className="text-[15px] font-semibold text-[#1D1D1F] dark:text-white">
+                Upvan Lake Clean-up & Mangrove Care
+              </h3>
+              <p className="text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+                Join 45 fellow citizens this Saturday morning at 7:30 AM. Gloves & kits provided.
+              </p>
+            </div>
+            <button
+              onClick={() => onNavigate('volunteer-events')}
+              className="px-4 py-2 rounded-full bg-[#007AFF] text-white text-[13px] font-semibold hover:bg-[#0062CC] transition-colors shrink-0"
+            >
+              Participate
+            </button>
+          </div>
+        </section>
+
+        {/* 8. Citizen Support Helpdesk */}
+        <div className="bg-[#E5E5EA]/40 dark:bg-[#1C1C1E]/50 rounded-[20px] p-4 flex items-center justify-between gap-3 text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#007AFF] shrink-0" />
+            <span>24/7 Municipal Helpline: <strong>1916</strong> (Disaster & Civic Emergencies)</span>
+          </div>
+          <button
+            onClick={() => onNavigate('profile')}
+            className="text-[12px] font-medium text-[#007AFF] hover:underline shrink-0"
+          >
+            Emergency Directory →
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
-

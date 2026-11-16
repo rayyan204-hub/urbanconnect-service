@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, createContext, useContext, useMemo, ReactNode } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, useMemo, ReactNode, Component, ErrorInfo } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { APIProvider } from '@vis.gl/react-google-maps';
 import { ScreenId, UserProfile } from './types';
+import { GMP_QUOTA_EXCEEDED_EVENT } from './utils/gmpQuota';
 import { INITIAL_USER } from './data/mockData';
 import { PrototypeBar } from './components/common/PrototypeBar';
 import { PhoneFrame } from './components/common/PhoneFrame';
@@ -124,33 +126,84 @@ const SCREEN_DEPTH: Record<ScreenId, number> = {
   admin: 60,
 };
 
-// Subtle slide-in & fade animation variants
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  onReset?: () => void;
+  screenKey?: string;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class ScreenErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  declare props: Readonly<ErrorBoundaryProps>;
+  declare setState: (
+    state: ErrorBoundaryState | ((prevState: Readonly<ErrorBoundaryState>) => ErrorBoundaryState)
+  ) => void;
+  state: ErrorBoundaryState = { hasError: false, errorMessage: '' };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, errorMessage: error?.message || 'Unexpected rendering error' };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Screen render error:', error, info);
+  }
+
+  componentDidUpdate(prevProps: { screenKey?: string }) {
+    if (this.state.hasError && prevProps.screenKey !== this.props.screenKey) {
+      this.setState({ hasError: false, errorMessage: '' });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#F5F5F7] dark:bg-[#1C1C1E]">
+          <div className="max-w-sm w-full bg-white dark:bg-[#2C2C2E] rounded-3xl p-6 shadow-xl border border-black/10 dark:border-white/10 space-y-3">
+            <h2 className="text-base font-bold text-[#1D1D1F] dark:text-white">
+              Unable to load this view
+            </h2>
+            <p className="text-xs text-[#6E6E73] dark:text-[#8E8E93] break-words">
+              {this.state.errorMessage}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                this.setState({ hasError: false, errorMessage: '' });
+                this.props.onReset?.();
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#007AFF] text-white text-xs font-semibold hover:bg-[#0062CC] transition-colors"
+            >
+              Reload View
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Opacity-only transitions avoid CSS filter/transform GPU compositing bugs with Leaflet map panes on mobile
 const screenTransitionVariants = {
-  enter: (direction: number) => ({
-    x: direction >= 0 ? 22 : -22,
+  enter: {
     opacity: 0,
-    filter: 'blur(1px)',
-  }),
+  },
   center: {
-    x: 0,
     opacity: 1,
-    filter: 'blur(0px)',
     transition: {
-      x: { type: 'spring', stiffness: 360, damping: 28 },
-      opacity: { duration: 0.2, ease: 'easeOut' },
-      filter: { duration: 0.18 },
+      opacity: { duration: 0.16, ease: 'easeOut' as const },
     },
   },
-  exit: (direction: number) => ({
-    x: direction >= 0 ? -18 : 18,
+  exit: {
     opacity: 0,
-    filter: 'blur(1px)',
     transition: {
-      x: { duration: 0.16, ease: [0.4, 0, 1, 1] },
-      opacity: { duration: 0.14, ease: 'linear' },
-      filter: { duration: 0.12 },
+      opacity: { duration: 0.1, ease: 'linear' as const },
     },
-  }),
+  },
 };
 
 function AppContent() {
@@ -172,8 +225,19 @@ function AppContent() {
   const [direction, setDirection] = useState<number>(1);
   const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isGmpQuotaExceeded, setIsGmpQuotaExceeded] = useState(false);
   const prevScreenRef = useRef<ScreenId>('home');
   const { theme, isDark } = useTheme();
+
+  useEffect(() => {
+    const handleQuotaExceeded = () => {
+      setIsGmpQuotaExceeded(true);
+    };
+    window.addEventListener(GMP_QUOTA_EXCEEDED_EVENT, handleQuotaExceeded);
+    return () => {
+      window.removeEventListener(GMP_QUOTA_EXCEEDED_EVENT, handleQuotaExceeded);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -305,8 +369,31 @@ function AppContent() {
   };
 
 
+  const isFullViewportMap = currentScreen === 'map' && !isDeviceFrame;
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#090d16] flex flex-col font-sans selection:bg-teal-600 selection:text-white relative transition-colors">
+    <div
+      className={`${
+        isFullViewportMap ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
+      } bg-[#F5F5F7] dark:bg-[#000000] flex flex-col font-sans selection:bg-[#007AFF] selection:text-white relative transition-colors`}
+    >
+      {isGmpQuotaExceeded && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
+          <span>
+            Google Maps Platform quota reached. If you are the app owner, visit{' '}
+            <a
+              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-semibold text-amber-950 hover:text-amber-800"
+            >
+              maps developer site
+            </a>{' '}
+            for instructions to update your account.
+          </span>
+        </div>
+      )}
+
       {/* Top Prototype Navigation & Viewport Mode Bar */}
       <PrototypeBar
         currentScreen={currentScreen}
@@ -320,31 +407,36 @@ function AppContent() {
       {/* Interactive Toast Notification Banner */}
       {toastMessage && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 transition-all pointer-events-none">
-          <div className="bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-full border border-teal-500/40 shadow-2xl backdrop-blur-md flex items-center gap-2 tracking-wide pointer-events-auto">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="bg-[#1D1D1F]/90 dark:bg-[#2C2C2E]/90 text-white text-[13px] font-semibold px-4 py-2 rounded-full border border-white/10 shadow-xl backdrop-blur-xl flex items-center gap-2 tracking-normal pointer-events-auto">
+            <span className="w-2 h-2 rounded-full bg-[#34C759]" />
             <span>{toastMessage}</span>
           </div>
         </div>
       )}
 
       {/* Main Viewport Container */}
-      <main className="flex-1 flex flex-col items-center justify-start p-0">
+      <main className="flex-1 w-full flex flex-col justify-start p-0 min-h-0">
         <PhoneFrame isDeviceFrame={isDeviceFrame}>
           <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
             <div className="flex-1 flex flex-col min-h-0 relative overflow-x-hidden">
-              <AnimatePresence mode="wait" custom={direction} initial={false}>
-                <motion.div
-                  key={currentScreen}
-                  custom={direction}
-                  variants={screenTransitionVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  className="flex-1 flex flex-col min-h-0 w-full"
-                >
-                  {renderActiveScreen()}
-                </motion.div>
-              </AnimatePresence>
+              <ScreenErrorBoundary
+                screenKey={currentScreen}
+                onReset={() => handleNavigate('home')}
+              >
+                <AnimatePresence mode="wait" custom={direction} initial={false}>
+                  <motion.div
+                    key={currentScreen}
+                    custom={direction}
+                    variants={screenTransitionVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="flex-1 flex flex-col min-h-0 w-full"
+                  >
+                    {renderActiveScreen()}
+                  </motion.div>
+                </AnimatePresence>
+              </ScreenErrorBoundary>
             </div>
             {showBottomNav && (
               <>
@@ -376,12 +468,29 @@ function AppContent() {
   );
 }
 
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+
 export default function App() {
-  return (
+  const appShell = (
     <ThemeProvider>
       <LanguageProvider>
         <AppContent />
       </LanguageProvider>
     </ThemeProvider>
+  );
+
+  if (!GOOGLE_MAPS_API_KEY) {
+    return appShell;
+  }
+
+  return (
+    <APIProvider
+      apiKey={GOOGLE_MAPS_API_KEY}
+      language="en"
+      region="IN"
+      libraries={['places', 'marker']}
+    >
+      {appShell}
+    </APIProvider>
   );
 }

@@ -125,22 +125,22 @@ export function BloodDonationScreen({ onNavigate, currentUser }: BloodDonationSc
     <div id="screen-blood-donation" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 min-h-[780px] relative transition-colors">
       <TopAppBar
         currentScreen="blood-donation"
-        title="Blood Donor Network"
-        subtitle="Emergency Community Blood Registry"
+        title="Blood Donors"
+        subtitle="Emergency life-saving community across Mumbai & Thane"
         showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
       />
 
       {/* Urgent Alert Banner */}
-      <div className="bg-rose-900 text-white px-4 py-3 border-b border-rose-950 flex items-center justify-between gap-3 shadow-xs">
+      <div className="bg-[#FF2D55]/10 text-[#FF2D55] dark:bg-[#FF2D55]/20 px-5 sm:px-8 py-3 border-b border-[#FF2D55]/20 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-rose-700 text-white flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-4 h-4 text-rose-200" />
+          <div className="w-7 h-7 rounded-full bg-[#FF2D55] text-white flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-3.5 h-3.5" />
           </div>
           <div>
-            <div className="text-xs font-bold text-rose-100">Critical Blood Shortage: O- & B-</div>
-            <div className="text-[10px] text-rose-200/80">Metro Trauma Ward needs immediate units</div>
+            <div className="text-[13px] font-semibold text-[#1D1D1F] dark:text-white">Critical Shortage: O- & B-</div>
+            <div className="text-[11px] text-[#6E6E73] dark:text-[#86868B]">Metro Trauma Ward needs immediate units</div>
           </div>
         </div>
         <button
@@ -148,18 +148,18 @@ export function BloodDonationScreen({ onNavigate, currentUser }: BloodDonationSc
             setSelectedGroup('O-');
             setIsRequestModalOpen(true);
           }}
-          className="px-2.5 py-1 bg-white text-rose-900 hover:bg-rose-50 text-[11px] font-bold rounded-lg shadow-xs flex-shrink-0"
+          className="px-3 py-1 bg-[#FF2D55] text-white text-[12px] font-semibold rounded-full hover:bg-[#D7003A] transition-colors flex-shrink-0"
         >
           View Units
         </button>
       </div>
 
       {/* Action Buttons: Request Blood & Become Donor */}
-      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 grid grid-cols-2 gap-2.5 transition-colors">
+      <div className="px-5 sm:px-8 py-3.5 bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-[#2C2C2E] grid grid-cols-2 gap-3 transition-colors">
         <button
           id="btn-request-blood"
           onClick={() => setIsRequestModalOpen(true)}
-          className="py-3 px-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-colors"
+          className="py-2.5 px-4 rounded-full bg-[#FF2D55] hover:bg-[#D7003A] text-white text-[13px] font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
         >
           <HeartPulse className="w-4 h-4" />
           <span>Request Blood</span>
@@ -168,9 +168,9 @@ export function BloodDonationScreen({ onNavigate, currentUser }: BloodDonationSc
         <button
           id="btn-become-donor"
           onClick={() => setIsRegisterModalOpen(true)}
-          className="py-3 px-3 rounded-2xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-colors"
+          className="py-2.5 px-4 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-[#E5E5EA] dark:hover:bg-[#3A3A3C] text-[#1D1D1F] dark:text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
         >
-          <UserPlus className="w-4 h-4" />
+          <UserPlus className="w-4 h-4 text-[#007AFF]" />
           <span>Become Donor</span>
         </button>
       </div>

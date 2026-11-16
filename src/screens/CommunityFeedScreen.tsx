@@ -329,8 +329,8 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
       {/* Top App Bar */}
       <TopAppBar
         currentScreen="community"
-        title="Community Feed"
-        subtitle="Civic Announcements & Neighborhood Board"
+        title="Community"
+        subtitle="Neighborhood announcements and local initiatives"
         showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
@@ -338,7 +338,7 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
           <button
             id="btn-header-new-post"
             onClick={() => setIsModalOpen(true)}
-            className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0"
+            className="px-4 py-1.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-full text-[13px] font-semibold flex items-center gap-1.5 shadow-xs transition-colors shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Post</span>
@@ -347,17 +347,16 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
       />
 
       {/* Category Filter Pills & Refresh Bar */}
-      <div className="px-4 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shadow-2xs z-20 transition-colors">
-        <div className="overflow-x-auto flex items-center gap-1.5 scrollbar-none flex-1">
-          <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 mr-1 flex-shrink-0" />
+      <div className="px-5 sm:px-8 py-2.5 bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-[#2C2C2E] flex items-center justify-between gap-2 z-20 transition-colors">
+        <div className="overflow-x-auto flex items-center gap-1.5 no-scrollbar flex-1">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`px-3.5 py-1 rounded-full text-[12px] font-medium whitespace-nowrap transition-all ${
                 selectedCategory === cat
-                  ? 'bg-teal-700 text-white shadow-xs'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+                  : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
               }`}
             >
               {cat}
@@ -457,14 +456,14 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
       {/* Citizen Post Composer Prompt Card */}
       <div
         onClick={() => setIsModalOpen(true)}
-        className="mx-4 mt-3 mb-1 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs flex items-center gap-3 cursor-pointer hover:border-teal-500/60 dark:hover:border-teal-600 transition-colors"
+        className="mx-5 sm:mx-8 mt-4 mb-2 p-3.5 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center gap-3 cursor-pointer hover:border-[#007AFF]/40 transition-colors"
       >
         <img
           src={currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces'}
           alt="Citizen Avatar"
-          className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700 shrink-0"
+          className="w-8 h-8 rounded-full object-cover ring-1 ring-[#E5E5EA] dark:ring-[#2C2C2E] shrink-0"
         />
-        <div className="flex-1 text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800/80 py-2 px-3 rounded-xl">
+        <div className="flex-1 text-[13px] text-[#86868B] bg-[#F5F5F7] dark:bg-[#2C2C2E] py-2 px-3.5 rounded-[12px]">
           Share an update, query or civic alert...
         </div>
         <button
@@ -473,7 +472,7 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
             e.stopPropagation();
             setIsModalOpen(true);
           }}
-          className="p-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-2xs shrink-0 transition-colors"
+          className="p-2 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-full shadow-xs shrink-0 transition-colors"
           title="Create New Post"
         >
           <Plus className="w-4 h-4" />
@@ -496,12 +495,12 @@ export function CommunityFeedScreen({ onNavigate, currentUser }: CommunityFeedSc
           </button>
         </div>
       ) : (
-        <div className="p-4 space-y-4 pb-24">
+        <div className="px-5 sm:px-8 space-y-4 pb-24">
           {filteredPosts.map((post) => (
             <article
               key={post.id}
               id={`post-card-${post.id}`}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden transition-all hover:shadow-md"
+              className="bg-white dark:bg-[#1C1C1E] rounded-[22px] border border-[#E5E5EA] dark:border-[#2C2C2E] shadow-[0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)]"
             >
               {/* Post Header */}
               <div className="p-3.5 pb-2 flex items-center justify-between">

@@ -16,6 +16,8 @@ import {
   CivicLeaderboardUser,
   CivicReward,
   RedeemedVoucher,
+  TransitBookmark,
+  FirestoreStatus,
 } from '../types';
 import {
   SAMPLE_USERS,
@@ -33,6 +35,18 @@ import {
   INITIAL_LEADERBOARD,
   INITIAL_CIVIC_REWARDS,
 } from '../data/mockData';
+import { db, handleFirestoreError, OperationType, auth } from './firebase';
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+} from 'firebase/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
 
 // Storage collection keys matching Firestore structure
 const STORAGE_PREFIX = 'urbanconnect_db_';
@@ -53,7 +67,38 @@ export const COLLECTIONS = {
   LEADERBOARD: `${STORAGE_PREFIX}leaderboard`,
   REWARDS: `${STORAGE_PREFIX}civic_rewards`,
   VOUCHERS: `${STORAGE_PREFIX}vouchers`,
+  BOOKMARKS: `${STORAGE_PREFIX}bookmarks`,
 } as const;
+
+let firestoreStatus: FirestoreStatus = {
+  isConnected: true,
+  databaseId: firebaseConfig.firestoreDatabaseId,
+  lastSyncTime: 'Just now',
+  syncedCollections: ['users', 'complaints', 'community_posts', 'bookings', 'bookmarks'],
+};
+
+const statusListeners = new Set<() => void>();
+export function subscribeToFirestoreStatus(listener: () => void): () => void {
+  statusListeners.add(listener);
+  return () => {
+    statusListeners.delete(listener);
+  };
+}
+
+export function getFirestoreStatus(): FirestoreStatus {
+  return firestoreStatus;
+}
+
+export function updateFirestoreStatus(updates: Partial<FirestoreStatus>) {
+  firestoreStatus = { ...firestoreStatus, ...updates };
+  statusListeners.forEach((fn) => {
+    try {
+      fn();
+    } catch (e) {
+      console.warn('Status listener error:', e);
+    }
+  });
+}
 
 type EventListener = () => void;
 const listeners: Map<string, Set<EventListener>> = new Map();
@@ -85,7 +130,12 @@ function getStoredArray<T>(key: string, defaultData: T[]): T[] {
       localStorage.setItem(key, JSON.stringify(defaultData));
       return defaultData;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      localStorage.setItem(key, JSON.stringify(defaultData));
+      return defaultData;
+    }
+    return parsed;
   } catch (err) {
     console.warn(`Failed reading from ${key}:`, err);
     return defaultData;
@@ -232,9 +282,10 @@ export function createComplaint(
     done: idx === 0,
   }));
 
+  const randSuffix = Math.random().toString(36).slice(2, 7);
   const newTicket: Complaint = {
     ...data,
-    id: `comp-${Date.now()}`,
+    id: `comp-${Date.now()}-${randSuffix}`,
     ticketId: `TMC-2026-${ticketNum}`,
     dateFiled: timeString,
     status: 'Reported',
@@ -248,6 +299,17 @@ export function createComplaint(
 
   const updated = [newTicket, ...complaints];
   setStoredArray(COLLECTIONS.COMPLAINTS, updated);
+
+  // Sync to Firebase Firestore
+  try {
+    const compRef = doc(db, 'complaints', newTicket.id);
+    setDoc(compRef, newTicket, { merge: true }).catch((err) => {
+      console.warn('Firestore write warning (complaint):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not dispatch complaint to Firestore:', err);
+  }
 
   // Award Civic Points (+25 for filing complaint)
   if (data.userId) {
@@ -327,6 +389,17 @@ export function updateComplaintStatus(
   complaints[index] = updatedComplaint;
   setStoredArray(COLLECTIONS.COMPLAINTS, complaints);
 
+  // Sync to Firebase Firestore
+  try {
+    const compRef = doc(db, 'complaints', target.id);
+    setDoc(compRef, updatedComplaint, { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (complaint):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not dispatch complaint update to Firestore:', err);
+  }
+
   // Send notification to complaint creator
   addNotification({
     userId: target.userId,
@@ -396,6 +469,17 @@ export function updateComplaintResolutionEvidence(
 
   complaints[index] = updated;
   setStoredArray(COLLECTIONS.COMPLAINTS, complaints);
+
+  // Sync to Firebase Firestore
+  try {
+    const compRef = doc(db, 'complaints', target.id);
+    setDoc(compRef, updated, { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (resolution evidence):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync resolution evidence to Firestore:', err);
+  }
 
   addNotification({
     userId: target.userId,
@@ -471,6 +555,17 @@ export function confirmCitizenResolution(
   complaints[index] = updated;
   setStoredArray(COLLECTIONS.COMPLAINTS, complaints);
 
+  // Sync to Firebase Firestore
+  try {
+    const compRef = doc(db, 'complaints', target.id);
+    setDoc(compRef, updated, { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (citizen resolution):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync citizen resolution to Firestore:', err);
+  }
+
   if (confirmed && (citizenUid || target.userId)) {
     updateUserCivicPoints(citizenUid || target.userId!, 50, 'Citizen resolution verification');
   }
@@ -504,6 +599,17 @@ export function endorseComplaint(complaintId: string, citizenUid?: string): Comp
   complaints[index] = updated;
   setStoredArray(COLLECTIONS.COMPLAINTS, complaints);
 
+  // Sync to Firebase Firestore
+  try {
+    const compRef = doc(db, 'complaints', target.id);
+    setDoc(compRef, updated, { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (endorsement):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync endorsement to Firestore:', err);
+  }
+
   if (citizenUid) {
     updateUserCivicPoints(citizenUid, 10, 'Endorsed duplicate civic issue');
   }
@@ -536,6 +642,17 @@ export function createCommunityPost(
   const updated = [newPost, ...posts];
   setStoredArray(COLLECTIONS.POSTS, updated);
 
+  // Sync to Firebase Firestore
+  try {
+    const postRef = doc(db, 'community_posts', newPost.id);
+    setDoc(postRef, newPost, { merge: true }).catch((err) => {
+      console.warn('Firestore write warning (post):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not dispatch post to Firestore:', err);
+  }
+
   addNotification({
     title: 'Post Published',
     message: `Your community post "${newPost.title.slice(0, 35)}..." is live.`,
@@ -565,6 +682,18 @@ export function togglePostLike(postId: string, userId: string = 'current_user'):
   };
 
   setStoredArray(COLLECTIONS.POSTS, posts);
+
+  // Sync to Firebase Firestore
+  try {
+    const postRef = doc(db, 'community_posts', post.id);
+    setDoc(postRef, posts[index], { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (post like):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync post like to Firestore:', err);
+  }
+
   return !hasLiked;
 }
 
@@ -578,7 +707,7 @@ export function addPostComment(
 
   const post = posts[index];
   const newComment = {
-    id: `cmt-${Date.now()}`,
+    id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     author: comment.author,
     avatar: comment.avatar,
     text: comment.text,
@@ -592,6 +721,18 @@ export function addPostComment(
   };
 
   setStoredArray(COLLECTIONS.POSTS, posts);
+
+  // Sync to Firebase Firestore
+  try {
+    const postRef = doc(db, 'community_posts', post.id);
+    setDoc(postRef, posts[index], { merge: true }).catch((err) => {
+      console.warn('Firestore update warning (post comment):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync post comment to Firestore:', err);
+  }
+
   return posts[index];
 }
 
@@ -614,14 +755,26 @@ export function createLostFoundItem(
   data: Omit<LostFoundItem, 'id' | 'date' | 'status'>
 ): LostFoundItem {
   const items = getLostFoundItems();
+  const randSuffix = Math.random().toString(36).slice(2, 7);
   const newItem: LostFoundItem = {
     ...data,
-    id: `lf-${Date.now()}`,
+    id: `lf-${Date.now()}-${randSuffix}`,
     date: `${data.type === 'lost' ? 'Lost' : 'Found'} Today`,
     status: 'Open',
   };
 
   setStoredArray(COLLECTIONS.LOST_FOUND, [newItem, ...items]);
+
+  // Sync to Firebase Firestore
+  try {
+    const itemRef = doc(db, 'lost_found', newItem.id);
+    setDoc(itemRef, newItem, { merge: true }).catch((err) => {
+      console.warn('Firestore write warning (lost_found):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync lost_found to Firestore:', err);
+  }
 
   addNotification({
     title: `${data.type === 'lost' ? 'Lost Report' : 'Found Item'} Listed`,
@@ -639,6 +792,18 @@ export function markLostFoundStatus(id: string, status: 'Open' | 'Claimed'): boo
   if (index === -1) return false;
   items[index] = { ...items[index], status };
   setStoredArray(COLLECTIONS.LOST_FOUND, items);
+
+  // Sync to Firebase Firestore
+  try {
+    const itemRef = doc(db, 'lost_found', id);
+    setDoc(itemRef, items[index], { merge: true }).catch((err) => {
+      console.warn('Firestore write warning (lost_found update):', err);
+    });
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Could not sync lost_found update to Firestore:', err);
+  }
+
   return true;
 }
 
@@ -1104,3 +1269,196 @@ export function resetAllDataToDefault(): void {
   // Trigger all listeners
   Object.values(COLLECTIONS).forEach((col) => notifyCollectionChange(col));
 }
+
+// -------------------------------------------------------------
+// TRANSIT TIMETABLE BOOKMARKS & FIRESTORE STORAGE
+// -------------------------------------------------------------
+export function getTransitBookmarks(userId?: string): TransitBookmark[] {
+  const all = getStoredArray<TransitBookmark>(COLLECTIONS.BOOKMARKS, [
+    {
+      id: 'bm-default-1',
+      userId: userId || 'demo-user',
+      itemType: 'train',
+      routeNumber: '95311',
+      routeName: 'CSMT - Kalyan Fast AC Local',
+      origin: 'CSMT Mumbai',
+      destination: 'Kalyan Junction',
+      departureTime: '06:42 AM',
+      savedAt: new Date().toISOString(),
+    },
+    {
+      id: 'bm-default-2',
+      userId: userId || 'demo-user',
+      itemType: 'bus',
+      routeNumber: 'TMT 65 AC',
+      routeName: 'Thane Stn (W) to Borivali Stn (E) via Ghodbunder',
+      origin: 'Thane Railway Station (West)',
+      destination: 'Borivali Station (East)',
+      departureTime: '08:00 AM',
+      savedAt: new Date().toISOString(),
+    },
+  ]);
+  if (!userId) return all;
+  return all.filter((b) => b.userId === userId || !b.userId);
+}
+
+export async function saveTransitBookmark(
+  bookmark: Omit<TransitBookmark, 'id' | 'savedAt'> & { id?: string }
+): Promise<TransitBookmark> {
+  const current = getStoredArray<TransitBookmark>(COLLECTIONS.BOOKMARKS, []);
+  const newBookmark: TransitBookmark = {
+    ...bookmark,
+    id: bookmark.id || `bm-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    savedAt: new Date().toISOString(),
+  };
+
+  const exists = current.some(
+    (b) => b.routeNumber === newBookmark.routeNumber && b.userId === newBookmark.userId
+  );
+
+  if (!exists) {
+    const updated = [newBookmark, ...current];
+    setStoredArray(COLLECTIONS.BOOKMARKS, updated);
+
+    // Save to Firestore if user is authenticated
+    try {
+      if (bookmark.userId && auth.currentUser) {
+        const bmRef = doc(db, 'users', bookmark.userId, 'bookmarks', newBookmark.id);
+        await setDoc(bmRef, newBookmark);
+      }
+      updateFirestoreStatus({ lastSyncTime: 'Just now' });
+    } catch (err) {
+      console.warn('Firestore bookmark sync warning:', err);
+    }
+
+    addNotification({
+      title: 'Timetable Saved',
+      message: `${newBookmark.routeNumber} (${newBookmark.origin} to ${newBookmark.destination}) pinned to your transit favorites.`,
+      type: 'transit',
+      actionScreen: bookmark.itemType === 'train' ? 'train-info' : 'bus-info',
+    });
+  }
+
+  return newBookmark;
+}
+
+export async function removeTransitBookmark(bookmarkId: string, userId?: string): Promise<void> {
+  const current = getStoredArray<TransitBookmark>(COLLECTIONS.BOOKMARKS, []);
+  const updated = current.filter((b) => b.id !== bookmarkId);
+  setStoredArray(COLLECTIONS.BOOKMARKS, updated);
+
+  try {
+    if (userId && auth.currentUser) {
+      const bmRef = doc(db, 'users', userId, 'bookmarks', bookmarkId);
+      await deleteDoc(bmRef);
+    }
+    updateFirestoreStatus({ lastSyncTime: 'Just now' });
+  } catch (err) {
+    console.warn('Firestore bookmark delete warning:', err);
+  }
+}
+
+export async function saveBookingToFirestore(booking: any): Promise<void> {
+  try {
+    if (booking?.id) {
+      const bRef = doc(db, 'bookings', booking.id);
+      await setDoc(bRef, booking, { merge: true });
+      updateFirestoreStatus({ lastSyncTime: 'Just now' });
+    }
+  } catch (e) {
+    console.warn('Firestore booking sync warning:', e);
+  }
+}
+
+// Global initialization of live Firestore listeners and multi-tab synchronization
+export function initFirestoreSync() {
+  try {
+    // 1. Complaints Listener
+    const complaintsRef = collection(db, 'complaints');
+    onSnapshot(
+      complaintsRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const remoteList: Complaint[] = [];
+          snapshot.forEach((d) => remoteList.push(d.data() as Complaint));
+          if (remoteList.length > 0) {
+            const currentLocal = getComplaints();
+            const map = new Map<string, Complaint>();
+            currentLocal.forEach((c) => map.set(c.id, c));
+            remoteList.forEach((c) => map.set(c.id, c));
+            const merged = Array.from(map.values());
+            setStoredArray(COLLECTIONS.COMPLAINTS, merged);
+            updateFirestoreStatus({ isConnected: true, lastSyncTime: 'Just now' });
+          }
+        }
+      },
+      (err) => {
+        console.warn('Complaints snapshot listener notice:', err.message);
+      }
+    );
+
+    // 2. Community Posts Listener
+    const postsRef = collection(db, 'community_posts');
+    onSnapshot(
+      postsRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const remotePosts: CommunityPost[] = [];
+          snapshot.forEach((d) => remotePosts.push(d.data() as CommunityPost));
+          if (remotePosts.length > 0) {
+            const currentLocal = getCommunityPosts();
+            const map = new Map<string, CommunityPost>();
+            currentLocal.forEach((p) => map.set(p.id, p));
+            remotePosts.forEach((p) => map.set(p.id, p));
+            const merged = Array.from(map.values());
+            setStoredArray(COLLECTIONS.POSTS, merged);
+            updateFirestoreStatus({ isConnected: true, lastSyncTime: 'Just now' });
+          }
+        }
+      },
+      (err) => {
+        console.warn('Posts snapshot listener notice:', err.message);
+      }
+    );
+
+    // 3. Lost & Found Items Listener
+    const lfRef = collection(db, 'lost_found');
+    onSnapshot(
+      lfRef,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const remoteItems: LostFoundItem[] = [];
+          snapshot.forEach((d) => remoteItems.push(d.data() as LostFoundItem));
+          if (remoteItems.length > 0) {
+            const currentLocal = getLostFoundItems();
+            const map = new Map<string, LostFoundItem>();
+            currentLocal.forEach((item) => map.set(item.id, item));
+            remoteItems.forEach((item) => map.set(item.id, item));
+            const merged = Array.from(map.values());
+            setStoredArray(COLLECTIONS.LOST_FOUND, merged);
+            updateFirestoreStatus({ isConnected: true, lastSyncTime: 'Just now' });
+          }
+        }
+      },
+      (err) => {
+        console.warn('Lost&Found snapshot listener notice:', err.message);
+      }
+    );
+
+    // 4. Cross-tab/window storage listener for multiple users on same machine
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        if (e.key && e.key.startsWith(STORAGE_PREFIX)) {
+          notifyCollectionChange(e.key);
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Firestore sync init error:', err);
+  }
+}
+
+// Trigger initial listener safely
+setTimeout(() => {
+  initFirestoreSync();
+}, 500);

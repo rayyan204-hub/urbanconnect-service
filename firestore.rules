@@ -18,12 +18,52 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    // Citizen profiles - accessible for civic collaboration and directory
     match /users/{userId} {
-      allow get: if isOwner(userId) && isValidId(userId);
-      allow create, update: if isOwner(userId) && isValidId(userId);
+      allow get: if isValidId(userId);
+      allow list: if true;
+      allow create, update: if isValidId(userId);
+      allow delete: if false;
+
+      // User bookmarks (e.g., saved train and bus timetable lines)
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if isValidId(bookmarkId);
+      }
+    }
+
+    // Civic grievances & complaints (Multi-user filing, officer assignments & endorsements)
+    match /complaints/{complaintId} {
+      allow get, list: if true;
+      allow create: if isValidId(complaintId);
+      allow update: if isValidId(complaintId);
       allow delete: if false;
     }
 
+    // Civic community bulletin (Public reading, citizen posting, multi-user likes & comments)
+    match /community_posts/{postId} {
+      allow get, list: if true;
+      allow create: if isValidId(postId);
+      allow update: if isValidId(postId);
+      allow delete: if false;
+    }
+
+    // Lost and Found civic registry (Public multi-user directory)
+    match /lost_found/{itemId} {
+      allow get, list: if true;
+      allow create: if isValidId(itemId);
+      allow update: if isValidId(itemId);
+      allow delete: if false;
+    }
+
+    // Booked tickets & passes (UTS suburban passes, IRCTC reservations)
+    match /bookings/{bookingId} {
+      allow get, list: if true;
+      allow create: if isValidId(bookingId);
+      allow update: if isValidId(bookingId);
+      allow delete: if false;
+    }
+
+    // Connection testing
     match /test/connection {
       allow read: if true;
     }

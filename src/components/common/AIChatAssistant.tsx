@@ -361,6 +361,10 @@ export function AIChatAssistant({
       case 'generate_parking_code':
         handleSend('Generate a barcode / QR for scanning parking code');
         break;
+      case 'navigate_train_info':
+        handleClose();
+        onNavigate('train-info');
+        break;
       case 'report_pothole':
         handleSend('There is a pothole on the main road in my ward that needs urgent repair.');
         break;
@@ -449,24 +453,24 @@ export function AIChatAssistant({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.98 }}
             transition={{ duration: 0.18 }}
-            className="w-full sm:max-w-xl h-[88vh] sm:h-[660px] flex flex-col bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
+            className="w-full sm:max-w-xl h-[88vh] sm:h-[660px] flex flex-col bg-white dark:bg-[#1C1C1E] rounded-t-[32px] sm:rounded-[28px] shadow-2xl border border-black/[0.06] dark:border-white/[0.08] overflow-hidden font-sans"
           >
-            {/* Header with Civic Identity and Performance Telemetry */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-900 via-teal-800 to-emerald-800 text-white shrink-0">
+            {/* Apple Style Translucent Bar */}
+            <div className="flex items-center justify-between px-5 py-3.5 bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-xl border-b border-[#E5E5EA] dark:border-[#2C2C2E] text-[#1D1D1F] dark:text-white shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-md border border-white/25">
-                  <Bot className="w-5 h-5 text-teal-100" />
+                <div className="w-9 h-9 rounded-[10px] bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center">
+                  <Bot className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h3 className="text-sm font-bold text-white tracking-wide">UrbanConnect AI</h3>
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Optimized Civic Engine
+                    <h3 className="text-[15px] font-bold text-[#1D1D1F] dark:text-white">Civic Assistant</h3>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#34C759]/10 text-[#34C759]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#34C759]" />
+                      Online
                     </span>
                   </div>
-                  <p className="text-[11px] text-teal-100/80 truncate max-w-[240px]">
-                    Direct Resolution • {currentUser?.ward || 'Mumbai & Thane'}
+                  <p className="text-[12px] text-[#6E6E73] dark:text-[#86868B] truncate max-w-[240px]">
+                    Municipal Resolution • {currentUser?.ward || 'Ward 4'}
                   </p>
                 </div>
               </div>
@@ -476,15 +480,15 @@ export function AIChatAssistant({
                   id="reset-chat-btn"
                   onClick={handleReset}
                   title="Clear history & restart"
-                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center gap-1 text-[10px]"
+                  className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] dark:hover:text-white rounded-full transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
                   id="close-chat-btn"
                   onClick={handleClose}
-                  title="Close Assistant (Esc)"
-                  className="p-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title="Close Assistant"
+                  className="p-2 text-[#6E6E73] hover:text-[#1D1D1F] dark:hover:text-white rounded-full transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -499,7 +503,7 @@ export function AIChatAssistant({
             )}
 
             {/* Conversation Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50 dark:bg-slate-950">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F5F5F7] dark:bg-[#000000]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -507,10 +511,10 @@ export function AIChatAssistant({
                 >
                   {/* Message Bubble */}
                   <div
-                    className={`max-w-[92%] sm:max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs relative group ${
+                    className={`max-w-[90%] sm:max-w-[82%] px-4 py-2.5 text-[14px] leading-relaxed shadow-xs relative group ${
                       msg.sender === 'user'
-                        ? 'bg-teal-700 text-white rounded-br-none font-medium'
-                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-800 rounded-bl-none'
+                        ? 'bg-[#007AFF] text-white rounded-[20px] rounded-br-[4px] font-normal'
+                        : 'bg-white dark:bg-[#1C1C1E] text-[#1D1D1F] dark:text-white border border-black/[0.04] dark:border-white/[0.06] rounded-[20px] rounded-bl-[4px]'
                     }`}
                   >
                     <div className="whitespace-pre-line space-y-1.5">
@@ -924,16 +928,16 @@ export function AIChatAssistant({
             </div>
 
             {/* Categorized Filter Tabs for Quick Prompts */}
-            <div className="px-3 pt-2 bg-white dark:bg-slate-900 border-t border-slate-200/70 dark:border-slate-800/80">
-              <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+            <div className="px-4 pt-2.5 bg-white dark:bg-[#1C1C1E] border-t border-black/[0.04] dark:border-white/[0.06]">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
                 {PROMPT_CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                    className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-colors ${
                       activeCategory === cat.id
-                        ? 'bg-teal-700 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                        ? 'bg-[#007AFF] text-white font-semibold'
+                        : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
                     }`}
                   >
                     {cat.label}
@@ -943,13 +947,13 @@ export function AIChatAssistant({
             </div>
 
             {/* Quick Suggestion Chips */}
-            <div className="px-3 py-1.5 bg-white dark:bg-slate-900 overflow-x-auto no-scrollbar flex items-center gap-1.5 shrink-0">
+            <div className="px-4 py-2 bg-white dark:bg-[#1C1C1E] overflow-x-auto no-scrollbar flex items-center gap-1.5 shrink-0">
               {(CATEGORIZED_PROMPTS[activeCategory] || CATEGORIZED_PROMPTS.all).map(
                 (prompt, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSend(prompt)}
-                    className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-teal-50 hover:text-teal-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border border-slate-200/60 dark:border-slate-700/60"
+                    className="shrink-0 px-3 py-1 rounded-full text-[12px] font-medium bg-[#F5F5F7] hover:bg-[#E5E5EA] dark:bg-[#2C2C2E] dark:hover:bg-[#3A3A3C] text-[#1D1D1F] dark:text-white transition-colors"
                   >
                     {prompt}
                   </button>
@@ -957,8 +961,8 @@ export function AIChatAssistant({
               )}
             </div>
 
-            {/* Conversational Input Bar with Speech-to-Text */}
-            <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
+            {/* Apple Messages Style Input Bar */}
+            <div className="p-3 bg-white dark:bg-[#1C1C1E] border-t border-black/[0.04] dark:border-white/[0.06] flex items-center gap-2 shrink-0">
               <div className="relative flex-1">
                 <input
                   ref={inputRef}
@@ -974,27 +978,23 @@ export function AIChatAssistant({
                   }}
                   placeholder={
                     isListening
-                      ? 'Listening to your voice... speak now'
-                      : 'Ask queries, report potholes, book parking...'
+                      ? 'Listening to voice...'
+                      : 'Ask a question or report an issue...'
                   }
-                  className={`w-full text-xs bg-slate-100 dark:bg-slate-800 border rounded-xl pl-3.5 pr-9 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600 ${
-                    isListening
-                      ? 'border-emerald-500 ring-2 ring-emerald-400/40 animate-pulse'
-                      : 'border-slate-200 dark:border-slate-700'
-                  }`}
+                  className="w-full text-[14px] bg-[#F5F5F7] dark:bg-[#2C2C2E] rounded-full pl-4 pr-10 py-2.5 text-[#1D1D1F] dark:text-white placeholder-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/25 transition-all"
                 />
                 {speechSupported && (
                   <button
                     type="button"
                     onClick={toggleListening}
-                    title={isListening ? 'Stop recording voice' : 'Voice input (Hindi/English)'}
-                    className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
+                    title={isListening ? 'Stop recording voice' : 'Voice input'}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors ${
                       isListening
-                        ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/80 animate-bounce'
-                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        ? 'text-[#34C759] bg-[#34C759]/10 animate-pulse'
+                        : 'text-[#86868B] hover:text-[#1D1D1F]'
                     }`}
                   >
-                    {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                   </button>
                 )}
               </div>
@@ -1003,8 +1003,8 @@ export function AIChatAssistant({
                 id="ai-assistant-send-btn"
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isTyping}
-                className="p-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 disabled:opacity-40 text-white transition-all shadow-sm"
-                title="Send query (Enter)"
+                className="w-9 h-9 rounded-full bg-[#007AFF] hover:bg-[#0062CC] disabled:opacity-30 text-white flex items-center justify-center transition-all shadow-xs shrink-0"
+                title="Send query"
               >
                 <Send className="w-4 h-4" />
               </button>

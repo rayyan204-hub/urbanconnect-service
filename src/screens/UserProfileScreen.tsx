@@ -15,10 +15,8 @@ import { switchUserRole } from '../services/authService';
 import { CivicGamificationHub } from '../components/profile/CivicGamificationHub';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageSwitcher } from '../components/common/LanguageSwitcher';
+import { FirestoreStatusBanner } from '../components/common/FirestoreStatusBanner';
 import {
-  User,
-  Mail,
-  Phone,
   ShieldCheck,
   Award,
   HeartPulse,
@@ -30,8 +28,6 @@ import {
   LogOut,
   ChevronRight,
   QrCode,
-  UserCheck,
-  LogIn,
   CheckCircle2,
   X,
   Copy,
@@ -52,8 +48,8 @@ interface UserProfileScreenProps {
 
 export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpdate }: UserProfileScreenProps) {
   const [user, setUser] = useState<UserProfile>(currentUser || INITIAL_USER);
-  const { theme, isDark, toggleTheme } = useTheme();
-  const { language, setLanguage, currentLanguageInfo, t } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
+  const { currentLanguageInfo, t } = useLanguage();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showIdModal, setShowIdModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -73,7 +69,6 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
     return () => unsub();
   }, [currentUser, user.uid]);
 
-  // Dynamic user activity statistics
   const userComplaintsCount = getComplaints().filter((c) => c.userId === user.uid).length;
   const userVolunteeredHours =
     getVolunteerEvents().filter((e) => e.registeredUserIds?.includes(user.uid || '')).length * 4;
@@ -121,141 +116,109 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
     }
   };
 
-
   return (
-    <div id="screen-user-profile" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 min-h-[780px] transition-colors">
+    <div id="screen-user-profile" className="flex-1 flex flex-col bg-[#F5F5F7] dark:bg-[#000000] min-h-[780px] transition-colors font-sans pb-16">
       <TopAppBar
         currentScreen="profile"
-        title="Citizen Profile"
-        subtitle="Verified Municipal Resident"
+        title="Profile & Settings"
+        subtitle="Citizen identity & preferences"
         showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
       />
 
-      <div className="p-4 space-y-3.5 pb-8">
-        {/* User Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs text-center relative overflow-hidden transition-colors">
-          <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-teal-700 to-emerald-600" />
-
-          {/* Profile Picture */}
-          <div className="relative inline-block mt-4 mb-2">
+      <div className="px-5 sm:px-8 py-5 max-w-2xl mx-auto w-full space-y-5">
+        {/* Apple ID Style User Card */}
+        <div className="bg-white dark:bg-[#1C1C1E] rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] p-6 shadow-xs text-center relative transition-colors">
+          <div className="relative inline-block mb-3">
             <img
               src={user.avatar}
               alt={user.name}
-              className="w-20 h-20 rounded-full object-cover ring-4 ring-white dark:ring-slate-800 shadow-md mx-auto"
+              className="w-20 h-20 rounded-full object-cover ring-2 ring-black/[0.06] dark:ring-white/[0.08] shadow-sm mx-auto"
             />
-            <div className="absolute bottom-0 right-0 p-1 bg-emerald-500 text-white rounded-full ring-2 ring-white dark:ring-slate-800">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mt-1">
-            <h3 className="text-base font-black text-slate-900 dark:text-slate-100">{user.name}</h3>
-            {user.role === 'admin' ? (
-              <span className="text-[10px] font-extrabold uppercase bg-teal-700 text-white px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
-                <ShieldAlert className="w-3 h-3" />
-                Admin
-              </span>
-            ) : (
-              <span className="text-[10px] font-semibold uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">
-                Citizen
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-teal-700 dark:text-teal-400 font-bold mt-0.5">{user.ward}</p>
-
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-[11px] font-medium border border-transparent dark:border-slate-700">
-              <Mail className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-              {user.email}
-            </span>
-            <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-[11px] font-medium border border-transparent dark:border-slate-700">
-              <Phone className="w-3 h-3 text-slate-400 dark:text-slate-500" />
-              {user.phone}
-            </span>
+          <div className="space-y-0.5">
+            <h2 className="text-[20px] font-bold text-[#1D1D1F] dark:text-white">{user.name}</h2>
+            <p className="text-[14px] text-[#6E6E73] dark:text-[#86868B]">{user.ward}</p>
+            <p className="text-[13px] text-[#007AFF] font-medium">{user.email} · {user.phone}</p>
           </div>
 
-          {/* Action Buttons: Digital ID, Role Switcher & Switch Account */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          {/* Action Buttons: Digital ID, Role Switcher */}
+          <div className="mt-5 grid grid-cols-2 gap-3 max-w-sm mx-auto">
             <button
               onClick={() => setShowIdModal(true)}
-              className="py-2.5 px-3 rounded-xl bg-teal-50 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+              className="py-2.5 px-4 rounded-full bg-[#007AFF] hover:bg-[#0062CC] text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all shadow-xs"
             >
-              <QrCode className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span>Smart Pass</span>
+              <QrCode className="w-4 h-4" />
+              <span>Digital ID Pass</span>
             </button>
             <button
               onClick={handleToggleRole}
-              className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
-                user.role === 'admin'
-                  ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                  : 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300'
-              }`}
-              title="Toggle role between citizen and municipal admin"
+              className="py-2.5 px-4 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-[#E5E5EA] dark:hover:bg-[#3A3A3C] text-[#1D1D1F] dark:text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Role: {user.role === 'admin' ? 'Demote to Citizen' : 'Make Admin'}</span>
+              <ShieldCheck className="w-4 h-4 text-[#007AFF]" />
+              <span>{user.role === 'admin' ? 'Role: Admin' : 'Role: Citizen'}</span>
             </button>
           </div>
-
-          {/* Dedicated Admin Portal Card if admin */}
-          {user.role === 'admin' && (
-            <div className="mt-3 p-3 bg-gradient-to-r from-teal-900 to-slate-900 text-white rounded-2xl flex items-center justify-between shadow-xs">
-              <div className="text-left">
-                <div className="flex items-center gap-1.5">
-                  <ShieldAlert className="w-4 h-4 text-teal-400" />
-                  <span className="text-xs font-bold text-teal-300">Admin Operations HQ</span>
-                </div>
-                <span className="text-[10px] text-slate-300">Resolve tickets, moderate feed & manage transit</span>
-              </div>
-              <button
-                onClick={() => onNavigate('admin')}
-                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
-              >
-                Open HQ
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Citizen Activity Stats with real dbService data */}
+        {/* Dedicated Admin Portal Card if admin */}
+        {user.role === 'admin' && (
+          <div className="p-4 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] shadow-xs flex items-center justify-between">
+            <div className="text-left">
+              <div className="flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 text-[#007AFF]" />
+                <span className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white">Admin Operations HQ</span>
+              </div>
+              <span className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">Resolve grievances, moderate feed & transit</span>
+            </div>
+            <button
+              onClick={() => onNavigate('admin')}
+              className="px-4 py-1.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-full text-[13px] font-semibold shadow-xs transition-colors"
+            >
+              Open HQ
+            </button>
+          </div>
+        )}
+
+        {/* Citizen Activity Stats */}
         <div className="grid grid-cols-3 gap-2.5">
           <div
             onClick={() => onNavigate('complaints')}
-            className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 text-center shadow-2xs hover:border-teal-400 dark:hover:border-teal-500 transition-colors cursor-pointer"
+            className="p-3.5 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] text-center shadow-xs cursor-pointer hover:border-[#007AFF]/40 transition-colors"
           >
-            <div className="w-8 h-8 rounded-xl bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 flex items-center justify-center mx-auto mb-1">
+            <div className="w-8 h-8 rounded-[10px] bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center mx-auto mb-1.5">
               <AlertOctagon className="w-4 h-4" />
             </div>
-            <div className="text-base font-black text-slate-900 dark:text-slate-100">{userComplaintsCount}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Complaints</div>
+            <div className="text-[18px] font-bold text-[#1D1D1F] dark:text-white">{userComplaintsCount}</div>
+            <div className="text-[11px] text-[#6E6E73] dark:text-[#86868B] font-medium">Grievances</div>
           </div>
 
           <div
             onClick={() => onNavigate('volunteer-events')}
-            className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 text-center shadow-2xs hover:border-teal-400 dark:hover:border-teal-500 transition-colors cursor-pointer"
+            className="p-3.5 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] text-center shadow-xs cursor-pointer hover:border-[#007AFF]/40 transition-colors"
           >
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center mx-auto mb-1">
+            <div className="w-8 h-8 rounded-[10px] bg-[#34C759]/10 text-[#34C759] flex items-center justify-center mx-auto mb-1.5">
               <Award className="w-4 h-4" />
             </div>
-            <div className="text-base font-black text-slate-900 dark:text-slate-100">{userVolunteeredHours}h</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Volunteered</div>
+            <div className="text-[18px] font-bold text-[#1D1D1F] dark:text-white">{userVolunteeredHours}h</div>
+            <div className="text-[11px] text-[#6E6E73] dark:text-[#86868B] font-medium">Volunteered</div>
           </div>
 
           <div
             onClick={() => onNavigate('blood-donation')}
-            className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 text-center shadow-2xs hover:border-teal-400 dark:hover:border-teal-500 transition-colors cursor-pointer"
+            className="p-3.5 bg-white dark:bg-[#1C1C1E] rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] text-center shadow-xs cursor-pointer hover:border-[#007AFF]/40 transition-colors"
           >
-            <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto mb-1">
+            <div className="w-8 h-8 rounded-[10px] bg-[#FF3B30]/10 text-[#FF3B30] flex items-center justify-center mx-auto mb-1.5">
               <HeartPulse className="w-4 h-4" />
             </div>
-            <div className="text-base font-black text-slate-900 dark:text-slate-100">{user.bloodDonations || 1}x</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Donations</div>
+            <div className="text-[18px] font-bold text-[#1D1D1F] dark:text-white">{user.bloodDonations || 1}x</div>
+            <div className="text-[11px] text-[#6E6E73] dark:text-[#86868B] font-medium">Donations</div>
           </div>
         </div>
 
-        {/* Prototype 2: Civic Standing, Gamification & Rewards */}
+        {/* Civic Standing, Gamification & Rewards */}
         <CivicGamificationHub
           user={user}
           onNavigate={onNavigate}
@@ -266,29 +229,32 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
           onToast={showToast}
         />
 
-        {/* Settings & Preferences List */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs divide-y divide-slate-100 dark:divide-slate-800 transition-colors">
-          <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/60 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Settings className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-            <span>App Settings & Preferences</span>
+        {/* Cloud Database Integration Banner */}
+        <FirestoreStatusBanner />
+
+        {/* Settings & Preferences List (Apple Inset Grouped) */}
+        <div className="bg-white dark:bg-[#1C1C1E] rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] overflow-hidden shadow-xs divide-y divide-black/[0.04] dark:divide-white/[0.06] transition-colors">
+          <div className="p-3.5 bg-[#F5F5F7]/60 dark:bg-[#2C2C2E]/40 text-[11px] font-semibold text-[#86868B] uppercase tracking-wider flex items-center gap-1.5">
+            <Settings className="w-3.5 h-3.5 text-[#007AFF]" />
+            <span>Preferences</span>
           </div>
 
           {/* Theme Appearance Mode Toggle */}
-          <div className="p-3.5 flex items-center justify-between">
+          <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 flex items-center justify-center">
-                {isDark ? <Moon className="w-4 h-4 text-amber-400" /> : <Sun className="w-4 h-4 text-amber-600" />}
+              <div className="w-8 h-8 rounded-[10px] bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center">
+                {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Dark Interface Mode</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Currently {isDark ? 'Dark (Night)' : 'Light (Day)'} Theme</div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white">Dark Interface Mode</div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">Currently {isDark ? 'Dark (Night)' : 'Light (Day)'} Theme</div>
               </div>
             </div>
             <button
               id="btn-profile-toggle-theme"
               onClick={toggleTheme}
               className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 ${
-                isDark ? 'bg-teal-600 dark:bg-teal-500' : 'bg-slate-300'
+                isDark ? 'bg-[#34C759]' : 'bg-[#E5E5EA] dark:bg-[#3A3A3C]'
               }`}
             >
               <div
@@ -300,20 +266,20 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
           </div>
 
           {/* Notifications Toggle */}
-          <div className="p-3.5 flex items-center justify-between">
+          <div className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[10px] bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center">
                 <Bell className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Civic Alerts & Notices</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Air quality, transit delays, emergency push</div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white">Civic Alerts & Notices</div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">Air quality, transit delays, emergency push</div>
               </div>
             </div>
             <button
               onClick={() => setNotificationsEnabled(!notificationsEnabled)}
               className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 ${
-                notificationsEnabled ? 'bg-teal-600 dark:bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'
+                notificationsEnabled ? 'bg-[#34C759]' : 'bg-[#E5E5EA] dark:bg-[#3A3A3C]'
               }`}
             >
               <div
@@ -325,23 +291,23 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
           </div>
 
           {/* Language Selector */}
-          <div className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+          <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-black/[0.01] transition-colors">
             <div
               onClick={() => setShowLanguageModal(true)}
               className="flex items-center gap-3 cursor-pointer flex-1"
             >
-              <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[10px] bg-[#5856D6]/10 text-[#5856D6] flex items-center justify-center">
                 <Globe className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white flex items-center gap-1.5">
                   <span>{t('profile_language', 'Interface Language')}</span>
-                  <span className="px-1.5 py-0.5 rounded-sm bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 font-mono text-[10px] font-extrabold uppercase">
+                  <span className="px-1.5 py-0.5 rounded-[6px] bg-[#007AFF]/10 text-[#007AFF] text-[10px] font-semibold">
                     {currentLanguageInfo.badge}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                  {currentLanguageInfo.name} ({currentLanguageInfo.englishName}) • {currentLanguageInfo.description}
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">
+                  {currentLanguageInfo.name} ({currentLanguageInfo.englishName})
                 </div>
               </div>
             </div>
@@ -353,41 +319,42 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
           {/* Help & Support */}
           <div
             onClick={() => setShowHelpModal(true)}
-            className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+            className="p-4 flex items-center justify-between cursor-pointer hover:bg-black/[0.01] transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[10px] bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center">
                 <HelpCircle className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Help & Civic Feedback</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">FAQs, Citizen Charter, Terms of Service</div>
+                <div className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white">Help & Civic Feedback</div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">FAQs, Citizen Charter, Terms of Service</div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronRight className="w-4 h-4 text-[#86868B]" />
           </div>
+
           {/* Reset Prototype Data */}
           <div
             onClick={handleResetData}
-            className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            className="p-4 flex items-center justify-between cursor-pointer hover:bg-black/[0.01] transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-[10px] bg-[#FF3B30]/10 text-[#FF3B30] flex items-center justify-center">
                 <RotateCcw className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-rose-700 dark:text-rose-300">Reset Prototype Database</div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400">Restore all Firestore mock collections to default</div>
+                <div className="text-[14px] font-semibold text-[#FF3B30]">Reset Seed Data</div>
+                <div className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">Restore all local collections to original state</div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <ChevronRight className="w-4 h-4 text-[#86868B]" />
           </div>
         </div>
 
         {/* Toast Notification */}
         {toastMessage && (
-          <div className="p-3 bg-slate-900 text-white dark:bg-teal-700 text-xs font-bold rounded-2xl shadow-lg flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <div className="p-3 bg-black/90 text-white text-[13px] font-medium rounded-full shadow-lg flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
             <span>{toastMessage}</span>
           </div>
         )}
@@ -396,54 +363,53 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
         <button
           id="btn-logout"
           onClick={() => setShowLogoutModal(true)}
-          className="w-full py-3.5 px-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3.5 px-4 rounded-full bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] text-[14px] font-semibold flex items-center justify-center gap-2 transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          <span>Sign Out / Switch Citizen Profile</span>
+          <span>Sign Out / Switch Profile</span>
         </button>
       </div>
 
       {/* Digital ID Modal */}
       {showIdModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-3 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-teal-700 text-white flex items-center justify-center mx-auto mb-2 shadow-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-[28px] p-6 shadow-2xl border border-black/[0.06] dark:border-white/[0.08] text-center space-y-4">
+            <div className="w-12 h-12 rounded-[16px] bg-[#007AFF] text-white flex items-center justify-center mx-auto shadow-xs">
               <QrCode className="w-6 h-6" />
             </div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Smart City Citizen Pass</h3>
-            <p className="text-xs text-teal-700 dark:text-teal-400 font-semibold">Verified Municipal Card • Ward 14</p>
+            <h3 className="text-[17px] font-bold text-[#1D1D1F] dark:text-white">Municipal Citizen Pass</h3>
+            <p className="text-[13px] text-[#007AFF] font-medium">Verified Identity • {user.ward}</p>
 
-            <div className="my-2 p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center">
-              <div className="w-36 h-36 bg-white p-2 rounded-xl shadow-xs flex items-center justify-center border border-slate-200">
-                <QrCode className="w-32 h-32 text-slate-800" />
+            <div className="p-5 bg-[#F5F5F7] dark:bg-[#2C2C2E] rounded-[20px] flex flex-col items-center">
+              <div className="p-3 bg-white rounded-[16px] shadow-xs">
+                <QrCode className="w-32 h-32 text-[#1D1D1F]" />
               </div>
-              <div className="flex items-center gap-1.5 mt-3">
-                <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">{user.citizenId}</span>
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-[13px] font-bold text-[#1D1D1F] dark:text-white">{user.citizenId}</span>
                 <button
                   onClick={handleCopyId}
-                  className="p-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700"
-                  title="Copy Citizen ID"
+                  className="p-1 text-[#86868B] hover:text-[#1D1D1F]"
+                  title="Copy ID"
                 >
-                  {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId ? <Check className="w-4 h-4 text-[#34C759]" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Contactless Transit Pass & City Hall Access</span>
+              <span className="text-[11px] text-[#86868B] mt-0.5">Contactless transit & civic facility pass</span>
             </div>
 
-            {/* NFC Tap Simulation */}
             <button
               onClick={handleSimulateNfc}
-              className="w-full py-2 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 bg-[#F5F5F7] dark:bg-[#2C2C2E] hover:bg-[#E5E5EA] text-[#1D1D1F] dark:text-white rounded-full text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors"
             >
-              <Smartphone className="w-4 h-4 text-teal-700 dark:text-teal-400" />
-              <span>{nfcTapped ? '✓ NFC Pass Validated (Beep!)' : 'Simulate NFC Turnstile Tap'}</span>
+              <Smartphone className="w-4 h-4 text-[#007AFF]" />
+              <span>{nfcTapped ? '✓ NFC Pass Validated' : 'Simulate NFC Turnstile Tap'}</span>
             </button>
 
             <button
               onClick={() => setShowIdModal(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-teal-700 hover:bg-slate-800 dark:hover:bg-teal-800 text-white text-xs font-bold"
+              className="w-full py-3 rounded-full bg-[#007AFF] text-white text-[14px] font-semibold"
             >
-              Close Pass
+              Done
             </button>
           </div>
         </div>
@@ -451,56 +417,46 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
 
       {/* Sign Out Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-3 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 flex items-center justify-center mx-auto">
-              <LogOut className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">Sign Out of Account?</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              Are you sure you want to sign out of <strong>{user.name}</strong>? You can sign back in anytime.
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-[26px] p-6 shadow-2xl border border-black/[0.06] text-center space-y-3">
+            <h3 className="text-[17px] font-bold text-[#1D1D1F] dark:text-white">Sign Out?</h3>
+            <p className="text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+              Are you sure you want to sign out of <strong>{user.name}</strong>?
             </p>
 
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors"
+                className="py-2.5 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white text-[13px] font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition-colors"
+                className="py-2.5 rounded-full bg-[#FF3B30] text-white text-[13px] font-semibold"
               >
-                Yes, Sign Out
+                Sign Out
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Language Selector Modal */}
+      {/* Language Modal */}
       {showLanguageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3 transition-colors">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-teal-700 dark:text-teal-400" />
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                  {t('lang_select_title', 'Select Municipal Language')}
-                </h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-[28px] p-6 shadow-2xl border border-black/[0.06] space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-black/[0.04]">
+              <h3 className="text-[16px] font-bold text-[#1D1D1F] dark:text-white">
+                {t('lang_select_title', 'Select Interface Language')}
+              </h3>
               <button
                 onClick={() => setShowLanguageModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                className="p-1 text-[#86868B] hover:text-[#1D1D1F]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {t('lang_select_subtitle', 'Choose your preferred language for Thane & Mumbai services:')}
-            </p>
 
             <LanguageSwitcher
               variant="modal"
@@ -513,46 +469,43 @@ export function UserProfileScreen({ onNavigate, currentUser, onLogout, onUserUpd
         </div>
       )}
 
-      {/* Help & Support Modal */}
+      {/* Help Modal */}
       {showHelpModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3 transition-colors">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-purple-700 dark:text-purple-400" />
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-                  UrbanConnect Help Center
-                </h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-[28px] p-6 shadow-2xl border border-black/[0.06] space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-black/[0.04]">
+              <h3 className="text-[16px] font-bold text-[#1D1D1F] dark:text-white">
+                Help & Support
+              </h3>
               <button
                 onClick={() => setShowHelpModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                className="p-1 text-[#86868B] hover:text-[#1D1D1F]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="font-bold text-slate-900 dark:text-slate-100 block mb-1">How do I track my complaint?</span>
-                <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                  Navigate to the Complaints screen where each submitted ticket displays official department updates and resolution timestamps.
+            <div className="space-y-3 text-[13px]">
+              <div className="p-3.5 bg-[#F5F5F7] dark:bg-[#2C2C2E] rounded-[16px]">
+                <span className="font-semibold text-[#1D1D1F] dark:text-white block mb-1">Tracking Grievances</span>
+                <p className="text-[#6E6E73] dark:text-[#86868B] text-[12px] leading-relaxed">
+                  Navigate to Grievances to check live stages, assigned engineers, and resolution photos.
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-200 dark:border-slate-700">
-                <span className="font-bold text-slate-900 dark:text-slate-100 block mb-1">Contact Municipal Headquarters</span>
-                <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                  Call <strong>311</strong> (Toll-Free) or write to <strong>support@urbanconnect.org</strong>.
+              <div className="p-3.5 bg-[#F5F5F7] dark:bg-[#2C2C2E] rounded-[16px]">
+                <span className="font-semibold text-[#1D1D1F] dark:text-white block mb-1">Citizen Helpline</span>
+                <p className="text-[#6E6E73] dark:text-[#86868B] text-[12px] leading-relaxed">
+                  Call toll-free <strong>311</strong> or email <strong>support@urbanconnect.org</strong>.
                 </p>
               </div>
             </div>
 
             <button
               onClick={() => setShowHelpModal(false)}
-              className="w-full py-2 bg-slate-900 dark:bg-teal-700 hover:bg-slate-800 dark:hover:bg-teal-800 text-white rounded-xl text-xs font-bold"
+              className="w-full py-3 rounded-full bg-[#007AFF] text-white text-[14px] font-semibold"
             >
-              Close
+              Done
             </button>
           </div>
         </div>

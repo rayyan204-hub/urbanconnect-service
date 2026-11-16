@@ -233,52 +233,21 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
     <div id="screen-admin" className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950 min-h-[780px] transition-colors pb-16">
       <TopAppBar
         currentScreen="admin"
-        title="Admin Operations HQ"
-        subtitle="Civic Grievance & Content Management"
+        title="Admin Operations"
+        subtitle="Civic grievance dispatch and municipal data controls"
         showBack
         onNavigate={onNavigate}
         currentUser={currentUser}
       />
 
-      {/* Admin Role Banner */}
-      <div className="bg-gradient-to-r from-slate-900 to-teal-950 text-white px-4 py-3 border-b border-teal-800/40 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-teal-500/20 text-teal-300 rounded-xl border border-teal-500/40">
-            <ShieldAlert className="w-5 h-5 text-teal-400" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-teal-300">Administrative Portal</span>
-              <span className="text-[10px] bg-teal-500/20 text-teal-300 px-1.5 py-0.5 rounded font-mono">Role: admin</span>
-            </div>
-            <p className="text-[11px] text-slate-300">Direct control over complaints, feed, events & transit data</p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => onNavigate('profile')}
-          className="text-[11px] font-semibold text-teal-300 hover:text-white bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700 transition-colors"
-        >
-          Exit Admin
-        </button>
-      </div>
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="mx-4 mt-2 p-2.5 bg-emerald-600 text-white text-xs font-semibold rounded-xl shadow-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Tabs Navigation */}
-      <div className="px-4 pt-3 pb-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="px-5 sm:px-8 py-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar border-b border-[#E5E5EA] dark:border-[#2C2C2E] bg-white/85 dark:bg-[#1C1C1E]/85 backdrop-blur-xl">
         <button
           onClick={() => setActiveTab('complaints')}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
             activeTab === 'complaints'
-              ? 'bg-teal-700 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+              : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
           }`}
         >
           <AlertTriangle className="w-3.5 h-3.5" />
@@ -287,10 +256,10 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
 
         <button
           onClick={() => setActiveTab('community')}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
             activeTab === 'community'
-              ? 'bg-teal-700 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+              : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
@@ -299,10 +268,10 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
 
         <button
           onClick={() => setActiveTab('events')}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
             activeTab === 'events'
-              ? 'bg-teal-700 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+              : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
@@ -311,10 +280,10 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
 
         <button
           onClick={() => setActiveTab('transit')}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
             activeTab === 'transit'
-              ? 'bg-teal-700 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+              : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
           }`}
         >
           <Bus className="w-3.5 h-3.5" />
@@ -323,10 +292,10 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
 
         <button
           onClick={() => setActiveTab('system')}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[12px] font-medium rounded-full whitespace-nowrap transition-all ${
             activeTab === 'system'
-              ? 'bg-teal-700 text-white shadow-xs'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+              : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#6E6E73] dark:text-[#86868B] hover:text-[#1D1D1F]'
           }`}
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -338,27 +307,27 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
       {activeTab === 'complaints' && (
         <div className="p-4 space-y-3 flex-1">
           {/* Search & Status Filters */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#86868B] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by ticket ID, title, or road..."
-                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-teal-500 shadow-2xs"
+                placeholder="Search ticket ID, title, road..."
+                className="w-full pl-10 pr-3.5 py-2.5 bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.06] rounded-[14px] text-[13px] text-[#1D1D1F] dark:text-white placeholder-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/25 shadow-xs"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
               {(['All', 'Pending', 'Under Review', 'In Progress', 'Resolved'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all ${
+                  className={`px-3 py-1 rounded-full text-[12px] font-medium whitespace-nowrap transition-all ${
                     statusFilter === st
-                      ? 'bg-slate-900 dark:bg-teal-700 text-white shadow-2xs'
-                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      ? 'bg-[#007AFF] text-white font-semibold shadow-xs'
+                      : 'bg-white dark:bg-[#1C1C1E] text-[#6E6E73] dark:text-[#86868B] border border-black/[0.04] dark:border-white/[0.06]'
                   }`}
                 >
                   {st}
@@ -368,53 +337,53 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
           </div>
 
           {/* List of complaints */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {filteredComplaints.length === 0 ? (
-              <div className="text-center py-10 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6">
-                <AlertTriangle className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No complaints found</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Try altering the search or status filter</p>
+              <div className="text-center py-10 bg-white dark:bg-[#1C1C1E] rounded-[24px] border border-black/[0.04] dark:border-white/[0.06] p-6">
+                <AlertTriangle className="w-8 h-8 text-[#86868B] mx-auto mb-2" />
+                <p className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white">No complaints found</p>
+                <p className="text-[12px] text-[#6E6E73] dark:text-[#86868B] mt-0.5">Try altering the search or status filter</p>
               </div>
             ) : (
               filteredComplaints.map((comp) => (
                 <div
                   key={comp.id}
-                  className="bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs space-y-2"
+                  className="bg-white dark:bg-[#1C1C1E] p-4 rounded-[20px] border border-black/[0.04] dark:border-white/[0.06] shadow-xs space-y-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-teal-700 dark:text-teal-400">
+                        <span className="text-[12px] font-bold text-[#007AFF]">
                           {comp.ticketId}
                         </span>
-                        <span className="text-[10px] text-slate-400">• {comp.dateFiled}</span>
+                        <span className="text-[11px] text-[#86868B]">• {comp.dateFiled}</span>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">{comp.title}</h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{comp.location}</p>
+                      <h4 className="text-[14px] font-semibold text-[#1D1D1F] dark:text-white mt-0.5">{comp.title}</h4>
+                      <p className="text-[12px] text-[#6E6E73] dark:text-[#86868B]">{comp.location}</p>
                     </div>
 
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0 ${
+                      className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
                         comp.status === 'Resolved'
-                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                          ? 'bg-[#34C759]/10 text-[#34C759]'
                           : comp.status === 'In Progress'
-                          ? 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300'
+                          ? 'bg-[#007AFF]/10 text-[#007AFF]'
                           : comp.status === 'Under Review'
-                          ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300'
-                          : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                          ? 'bg-[#5856D6]/10 text-[#5856D6]'
+                          : 'bg-[#FF9500]/10 text-[#FF9500]'
                       }`}
                     >
                       {comp.status}
                     </span>
                   </div>
 
-                  <div className="p-2 bg-slate-50 dark:bg-slate-850 rounded-xl text-[11px] text-slate-600 dark:text-slate-300">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">Latest Note: </span>
+                  <div className="p-2.5 bg-[#F5F5F7] dark:bg-[#2C2C2E] rounded-[12px] text-[12px] text-[#6E6E73] dark:text-[#86868B]">
+                    <span className="font-semibold text-[#1D1D1F] dark:text-white">Latest Note: </span>
                     {comp.lastUpdate}
                   </div>
 
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-500">Dept: {comp.department}</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
+                    <span className="text-[11px] text-[#86868B]">Dept: {comp.department}</span>
                     <button
                       onClick={() => {
                         setSelectedComplaint(comp);
@@ -426,7 +395,7 @@ export function AdminDashboardScreen({ onNavigate, currentUser }: AdminDashboard
                             'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?w=600&auto=format&fit=crop&q=80'
                         );
                       }}
-                      className="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-2xs transition-colors flex items-center gap-1"
+                      className="px-3.5 py-1.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-full text-[12px] font-semibold shadow-xs transition-colors flex items-center gap-1"
                     >
                       <span>Update Status</span>
                     </button>

@@ -349,3 +349,63 @@ export interface RedeemedVoucher {
   partner: string;
 }
 
+export type TrafficCongestionLevel = 'smooth' | 'moderate' | 'heavy' | 'severe';
+
+export interface TrafficSegment {
+  id: string;
+  name: string;
+  roadName: string;
+  stretch: string;
+  roadType: 'expressway' | 'highway' | 'arterial' | 'connector';
+  coordinates: [number, number][];
+  congestion: TrafficCongestionLevel;
+  currentSpeedKmH: number;
+  freeFlowSpeedKmH: number;
+  delayMinutes: number;
+  advisory: string;
+  lengthKm: number;
+  lastUpdated: string;
+}
+
+export interface TrafficIncident {
+  id: string;
+  roadName: string;
+  title: string;
+  lat: number;
+  lng: number;
+  type: 'congestion' | 'accident' | 'roadwork' | 'stall';
+  severity: 'low' | 'moderate' | 'high';
+  description: string;
+  impact: string;
+  delayMinutes: number;
+  reportedAgo: string;
+}
+
+export interface CityTrafficOverview {
+  congestionIndex: number; // 0-100%
+  overallStatus: 'Fluid' | 'Moderate' | 'Heavy Congestion' | 'Gridlock';
+  averageSpeedKmH: number;
+  activeBottlenecks: number;
+  totalDelayedMinutes: number;
+  lastSyncTime: string;
+}
+
+export interface TransitBookmark {
+  id: string;
+  userId: string;
+  itemType: 'train' | 'bus';
+  routeNumber: string;
+  routeName: string;
+  origin: string;
+  destination: string;
+  departureTime: string;
+  savedAt: string;
+}
+
+export interface FirestoreStatus {
+  isConnected: boolean;
+  databaseId: string;
+  lastSyncTime: string;
+  syncedCollections: string[];
+}
+

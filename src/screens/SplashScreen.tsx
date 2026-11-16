@@ -1,5 +1,5 @@
 import { ScreenId } from '../types';
-import { Building2, Sparkles, ArrowRight, ShieldCheck, Compass } from 'lucide-react';
+import { Building2, ArrowRight, ShieldCheck, Compass, Sparkles } from 'lucide-react';
 
 interface SplashScreenProps {
   onNavigate: (screen: ScreenId) => void;
@@ -9,64 +9,60 @@ export function SplashScreen({ onNavigate }: SplashScreenProps) {
   return (
     <div
       id="screen-splash"
-      className="flex-1 flex flex-col justify-between p-6 bg-gradient-to-b from-teal-900 via-teal-950 to-slate-950 text-white min-h-[780px]"
+      className="flex-1 flex flex-col justify-between p-6 sm:p-8 bg-[#F5F5F7] dark:bg-[#000000] text-[#1D1D1F] dark:text-white min-h-[780px] transition-colors"
     >
       {/* Top Status & Brand Chip */}
       <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-2 bg-teal-800/40 border border-teal-500/30 px-3 py-1 rounded-full text-xs text-teal-200 backdrop-blur-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>Smart City Hub v1.0</span>
+        <div className="flex items-center gap-2 bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.08] px-3.5 py-1.5 rounded-full text-[12px] font-medium text-[#6E6E73] dark:text-[#86868B] shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-[#34C759]" />
+          <span>Municipal Civic Portal</span>
         </div>
-        <div className="text-xs text-teal-300/70 font-mono tracking-wider">
-          M3 PROTOTYPE
+        <div className="text-[12px] text-[#86868B] font-medium">
+          v2.4
         </div>
       </div>
 
       {/* Main Logo & Identity Centerpiece */}
-      <div className="flex flex-col items-center text-center my-auto py-8">
-        {/* Animated Radiant App Logo */}
+      <div className="flex flex-col items-center text-center my-auto py-8 max-w-sm mx-auto">
+        {/* Apple Style App Icon */}
         <div className="relative mb-6">
-          <div className="absolute -inset-4 rounded-3xl bg-teal-500/20 blur-xl animate-pulse" />
-          <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-tr from-teal-500 via-emerald-400 to-cyan-300 p-0.5 shadow-xl shadow-teal-500/20">
-            <div className="w-full h-full bg-slate-900/90 backdrop-blur-sm rounded-[22px] flex items-center justify-center text-teal-300">
-              <Building2 className="w-12 h-12 text-teal-300 stroke-[1.75]" />
-            </div>
+          <div className="w-24 h-24 rounded-[26px] bg-gradient-to-b from-[#007AFF] to-[#0051D5] p-0.5 shadow-lg shadow-blue-500/20 flex items-center justify-center text-white">
+            <Building2 className="w-12 h-12 stroke-[1.75]" />
           </div>
-          <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-xl shadow-md">
-            <Sparkles className="w-4 h-4" />
+          <div className="absolute -bottom-1.5 -right-1.5 bg-[#34C759] text-white p-1.5 rounded-full shadow-md">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        {/* App Name */}
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
-          Urban<span className="text-teal-400">Connect</span>
+        {/* App Title & Slogan */}
+        <h1 className="text-[32px] sm:text-[36px] font-bold tracking-tight text-[#1D1D1F] dark:text-white mb-2 leading-tight">
+          UrbanConnect
         </h1>
 
-        {/* Required Tagline */}
-        <p className="text-teal-100 text-sm max-w-[280px] font-medium leading-relaxed mb-6">
-          Connecting Communities, Simplifying City Services
+        <p className="text-[16px] text-[#6E6E73] dark:text-[#86868B] font-normal leading-relaxed mb-6">
+          Your city, connected. Access civic services, check transit, and report issues in one calm place.
         </p>
 
-        {/* City Feature Highlights Pills */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-xs text-xs text-teal-200/80">
-          <span className="bg-teal-900/60 border border-teal-700/40 px-3 py-1 rounded-full">
+        {/* Civic Feature Highlights Pills */}
+        <div className="flex flex-wrap justify-center gap-2 text-[13px] text-[#6E6E73] dark:text-[#86868B]">
+          <span className="bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.08] px-3 py-1 rounded-full shadow-xs">
             🚌 Real-Time Transit
           </span>
-          <span className="bg-teal-900/60 border border-teal-700/40 px-3 py-1 rounded-full">
-            📢 Civic Notice Feed
+          <span className="bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.08] px-3 py-1 rounded-full shadow-xs">
+            📢 Grievance Desk
           </span>
-          <span className="bg-teal-900/60 border border-teal-700/40 px-3 py-1 rounded-full">
-            🩸 Blood & Aid Network
+          <span className="bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.08] px-3 py-1 rounded-full shadow-xs">
+            🩸 Life Support Network
           </span>
         </div>
       </div>
 
       {/* Bottom Action Area */}
-      <div className="flex flex-col gap-3 pb-4">
+      <div className="flex flex-col gap-3 pb-4 max-w-sm mx-auto w-full">
         <button
           id="btn-splash-get-started"
           onClick={() => onNavigate('login')}
-          className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+          className="w-full py-3.5 px-6 rounded-full bg-[#007AFF] hover:bg-[#0062CC] text-white font-semibold text-[15px] shadow-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
         >
           <span>Get Started</span>
           <ArrowRight className="w-4 h-4" />
@@ -75,15 +71,15 @@ export function SplashScreen({ onNavigate }: SplashScreenProps) {
         <button
           id="btn-splash-skip-dashboard"
           onClick={() => onNavigate('home')}
-          className="w-full py-3 px-6 rounded-2xl bg-slate-900/80 hover:bg-slate-800/80 border border-teal-600/30 text-teal-200 font-medium text-xs flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3 px-6 rounded-full bg-white dark:bg-[#1C1C1E] hover:bg-black/[0.03] dark:hover:bg-white/[0.06] border border-black/[0.06] dark:border-white/[0.08] text-[#1D1D1F] dark:text-white font-medium text-[14px] flex items-center justify-center gap-2 transition-colors shadow-xs"
         >
-          <Compass className="w-4 h-4 text-teal-400" />
-          <span>Explore Prototype Directly (Resident Mode)</span>
+          <Compass className="w-4 h-4 text-[#007AFF]" />
+          <span>Explore Directly (Guest Mode)</span>
         </button>
 
-        <div className="flex items-center justify-center gap-2 text-[11px] text-teal-300/60 pt-2">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Municipal Citizen Portal • Secure & Verified</span>
+        <div className="flex items-center justify-center gap-1.5 text-[12px] text-[#86868B] pt-2">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#34C759]" />
+          <span>Official Municipal Services Platform</span>
         </div>
       </div>
     </div>
